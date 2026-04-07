@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mezastar 記帳本</title>
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="機台圖鑑">
+
+    <link rel="apple-touch-icon" href="./icon.png">
+    <link rel="icon" type="image/png" href="./icon.png">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="min-h-screen bg-slate-100 flex justify-center font-sans" style="background-image: radial-gradient(#cbd5e1 2px, transparent 2px); background-size: 30px 30px;">
+    <div class="w-full max-w-md bg-white shadow-2xl flex flex-col relative min-h-screen overflow-hidden border-x-4 border-slate-800">
+        
+        <header class="bg-red-600 text-white p-4 pt-6 pb-8 relative z-10 shrink-0 border-b-8 border-slate-800">
+            <div class="absolute -bottom-5 left-1/2 -translate-x-1/2 w-10 h-10 bg-white rounded-full border-8 border-slate-800 z-20"></div>
+            <div class="flex items-center justify-center gap-2 mb-2">
+                <div class="pokeball-icon text-white w-[28px] h-[28px]"></div>
+                <h1 class="text-2xl font-black tracking-widest text-center" style="text-shadow: 2px 2px 0 #1e293b;">Mezastar 記帳本</h1>
+            </div>
+            <p class="text-red-100 text-sm text-center font-bold">寶可夢圖鑑與花費紀錄</p>
+        </header>
+
+        <div class="p-4 pt-8 shrink-0 relative z-0">
+            <div class="bg-gradient-to-r from-slate-800 to-slate-900 rounded-2xl p-4 text-white shadow-[0_4px_0_#0f172a] flex justify-between items-center border-2 border-slate-700">
+                <div>
+                    <p class="text-slate-300 text-sm mb-1 font-bold">累積花費</p>
+                    <div id="total-spent" class="text-3xl font-black text-yellow-400 tracking-wide flex items-center h-9">
+                        <i data-lucide="loader-2" class="animate-spin text-yellow-400 w-6 h-6 mt-2"></i>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <p class="text-slate-300 text-sm mb-1 font-bold">估計遊玩</p>
+                    <div class="text-xl font-black flex items-center justify-end gap-1 text-white h-7">
+                        <div class="pokeball-icon text-red-400 w-[20px] h-[20px]"></div> 
+                        <span id="total-plays">--</span> 道
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="px-4 mb-4 shrink-0">
+            <h2 class="text-sm font-black text-slate-600 mb-3 flex items-center gap-1">
+                <i data-lucide="plus" class="text-red-500 w-[18px] h-[18px]" stroke-width="3"></i> 隨手記一下 (今天)
+            </h2>
+            <div class="grid grid-cols-2 gap-3">
+                <button onclick="window.handleQuickAdd(30)" id="btn-quick-30" disabled class="bg-yellow-50 hover:bg-yellow-100 border-2 border-yellow-400 text-yellow-800 py-3 rounded-2xl font-black text-lg flex flex-col items-center justify-center transition-transform active:scale-95 shadow-[0_4px_0_#facc15] disabled:opacity-50">
+                    <span class="flex items-center gap-1"><i data-lucide="zap" class="text-yellow-500 fill-yellow-500 w-[18px] h-[18px]"></i> 1 道</span>
+                    <span class="text-sm font-bold text-yellow-600 mt-1">+30元</span>
+                </button>
+                <button onclick="window.handleQuickAdd(60)" id="btn-quick-60" disabled class="bg-red-50 hover:bg-red-100 border-2 border-red-400 text-red-800 py-3 rounded-2xl font-black text-lg flex flex-col items-center justify-center transition-transform active:scale-95 shadow-[0_4px_0_#f87171] disabled:opacity-50">
+                    <span class="flex items-center gap-1"><div class="pokeball-icon text-red-500 w-[18px] h-[18px]"></div> 2 道</span>
+                    <span class="text-sm font-bold text-red-600 mt-1">+60元</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="flex-1 overflow-y-auto px-4 pb-24">
+            <div class="flex justify-between items-end mb-3 mt-2 sticky top-0 bg-white/90 backdrop-blur-sm py-2 z-10">
+                <h2 class="text-sm font-black text-slate-600 flex items-center gap-1">
+                    <i data-lucide="history" class="text-blue-500 w-[18px] h-[18px]" stroke-width="3"></i> 戰利品圖鑑
+                </h2>
+                <button onclick="window.openModal()" id="btn-custom-add" disabled class="text-red-600 text-sm font-bold flex items-center gap-1 bg-red-100 px-3 py-1.5 rounded-xl hover:bg-red-200 transition-colors shadow-sm disabled:opacity-50">
+                    <i data-lucide="plus" class="w-[16px] h-[16px]" stroke-width="3"></i> 自訂新增
+                </button>
+            </div>
+
+            <div id="entries-list" class="space-y-4">
+                <div class="text-center py-12 text-slate-400 flex flex-col items-center">
+                    <i data-lucide="loader-2" class="animate-spin text-red-400 mb-4 w-10 h-10"></i>
+                    <p class="font-bold text-slate-500">載入紀錄中...</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="toast" class="absolute bottom-6 left-1/2 -translate-x-1/2 bg-slate-800 text-white px-4 py-2 rounded-full shadow-lg text-sm font-medium z-50 whitespace-nowrap animate-bounce hidden transition-opacity"></div>
+
+        <div id="modal" class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+            <div class="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl border-4 border-slate-800 flex flex-col max-h-[90vh]">
+                <div class="bg-red-600 p-4 border-b-4 border-slate-800 flex justify-between items-center text-white shrink-0">
+                    <h3 class="font-black text-lg flex items-center gap-2">
+                        <div class="pokeball-icon w-[20px] h-[20px]"></div>
+                        <span id="modal-title">登錄戰利品</span>
+                    </h3>
+                    <button onclick="window.closeModal()" class="text-red-200 hover:text-white transition-colors bg-red-700 p-1 rounded-full">
+                        <i data-lucide="x" class="w-[20px] h-[20px]" stroke-width="3"></i>
+                    </button>
+                </div>
+                
+                <div class="p-5 space-y-5 bg-slate-50 overflow-y-auto">
+                    <div>
+                        <label class="block text-sm font-black text-slate-700 mb-2">🎮 是誰玩的？</label>
+                        <div class="flex gap-2" id="player-buttons">
+                            <button onclick="window.setPlayer('姊姊')" data-player="姊姊" class="player-btn flex-1 py-2.5 rounded-xl font-black text-sm transition-all border-2 bg-white border-slate-200 text-slate-500 hover:border-slate-300 shadow-sm">姊姊</button>
+                            <button onclick="window.setPlayer('妹妹')" data-player="妹妹" class="player-btn flex-1 py-2.5 rounded-xl font-black text-sm transition-all border-2 bg-white border-slate-200 text-slate-500 hover:border-slate-300 shadow-sm">妹妹</button>
+                            <button onclick="window.setPlayer('一起')" data-player="一起" class="player-btn flex-1 py-2.5 rounded-xl font-black text-sm transition-all border-2 bg-orange-500 border-orange-600 text-white shadow-inner">一起</button>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-3 rounded-2xl border-2 border-slate-200 shadow-sm">
+                        <label class="block text-sm font-black text-slate-700 mb-1 flex items-center gap-1">
+                            <i data-lucide="hash" class="text-slate-400 w-[16px] h-[16px]"></i> 卡牌編號 (選填)
+                        </label>
+                        <input type="text" id="input-cardId" oninput="window.updateCardPreview()" placeholder="輸入編號，例如：1-2-001" class="w-full border-2 border-slate-200 rounded-xl px-3 py-2 text-slate-700 font-mono font-bold focus:outline-none focus:border-red-400 bg-slate-50 uppercase" />
+                        
+                        <div id="card-preview-container" class="mt-3 p-2 bg-gradient-to-r from-slate-800 to-slate-700 rounded-xl hidden items-center gap-3">
+                            </div>
+                    </div>
+
+                    <div class="flex gap-3">
+                        <div class="flex-1">
+                            <label class="block text-sm font-black text-slate-700 mb-1 flex items-center gap-1">
+                                <i data-lucide="calendar" class="w-[14px] h-[14px]"></i> 日期
+                            </label>
+                            <input type="date" id="input-date" class="w-full border-2 border-slate-200 rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:border-red-400 bg-white" />
+                        </div>
+                        
+                        <div class="flex-1">
+                            <label class="block text-sm font-black text-slate-700 mb-1 flex items-center gap-1">
+                                <i data-lucide="dollar-sign" class="w-[14px] h-[14px]"></i> 金額
+                            </label>
+                            <input type="number" id="input-amount" class="w-full border-2 border-slate-200 rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:border-red-400 bg-white font-bold" />
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-black text-slate-700 mb-1 flex items-center justify-between">
+                            <span class="flex items-center gap-1"><i data-lucide="map-pin" class="w-[14px] h-[14px]"></i> 地點</span>
+                            <button onclick="window.handleGetLocation()" id="btn-location" class="text-xs flex items-center gap-1 bg-blue-100 text-blue-700 px-2.5 py-1 rounded-lg hover:bg-blue-200 active:bg-blue-300 transition-colors font-bold disabled:opacity-50">
+                                <i data-lucide="locate-fixed" id="icon-location" class="w-[12px] h-[12px]"></i>
+                                <span id="text-location">自動定位</span>
+                            </button>
+                        </label>
+                        <input type="text" id="input-location" placeholder="例：新光三越、遠百 B1" class="w-full border-2 border-slate-200 rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:border-red-400 bg-white" />
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-black text-slate-700 mb-1 flex items-center gap-1">
+                            <i data-lucide="edit-2" class="w-[14px] h-[14px]"></i> 備註手札
+                        </label>
+                        <textarea id="input-note" placeholder="記錄一下當時開心的心情吧！" class="w-full border-2 border-slate-200 rounded-xl px-3 py-2 text-slate-700 h-20 resize-none focus:outline-none focus:border-red-400 bg-white"></textarea>
+                    </div>
+
+                    <button onclick="window.handleSave()" class="w-full bg-red-600 hover:bg-red-500 text-white font-black text-lg py-3.5 rounded-2xl transition-transform active:scale-95 shadow-[0_4px_0_#991b1b] flex justify-center items-center gap-2 mt-2 border-2 border-red-800">
+                        <div class="pokeball-icon w-[20px] h-[20px]"></div> 登錄到圖鑑！
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'mezastar-app';
+
+        const CARD_DB = {
+            "1-2-001": { name: "蓋歐卡", dex: 382, stars: 6 },
+            "1-2-002": { name: "固拉多", dex: 383, stars: 6 },
+            "1-1-001": { name: "噴火龍", dex: 6, stars: 6 },
+            "2-1-001": { name: "超夢", dex: 150, stars: 6 },
+            "2-1-002": { name: "夢幻", dex: 151, stars: 6 },
+            "3-1-001": { name: "烈空坐", dex: 384, stars: 6 },
+            "1-3-001": { name: "皮卡丘", dex: 25, stars: 5 },
+            "3-2-001": { name: "洛奇亞", dex: 249, stars: 6 },
+            "3-2-002": { name: "鳳王", dex: 250, stars: 6 },
+            "4-1-001": { name: "無極汰那", dex: 890, stars: 6 },
+            "4-1-002": { name: "蒼響", dex: 888, stars: 6 },
+            "4-1-003": { name: "藏瑪然特", dex: 889, stars: 6 },
+        };
+        const getPokemonImageUrl = (dex) => `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${dex}.png`;
+        const getToday = () => new Date().toISOString().split('T')[0];
+        
+        const renderPokeballIcons = () => {
+            const svgContent = `
+                <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <circle cx="12" cy="12" r="3" />
+                    <path d="M2 12h7" />
+                    <path d="M15 12h7" />
+                </svg>
+            `;
+            document.querySelectorAll('.pokeball-icon').forEach(el => {
+                el.innerHTML = svgContent;
+            });
+        };
+
+        let currentUser = null;
+        let entries = [];
+        let isLoading = true;
+        let isLocating = false;
+        let editingId = null;
+        let formData = { date: getToday(), amount: 30, note: '', location: '', player: '一起', cardId: '' };
+        let toastTimeout = null;
+
+        const showToast = (message) => {
+            const toastEl = document.getElementById('toast');
+            toastEl.textContent = message;
+            toastEl.classList.remove('hidden');
+            toastEl.classList.add('flex');
+            
+            if (toastTimeout) clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toastEl.classList.add('hidden');
+                toastEl.classList.remove('flex');
+            }, 2500);
+        };
+
+        const updateAppUI = () => {
+            document.getElementById('btn-quick-30').disabled = isLoading || !currentUser;
+            document.getElementById('btn-quick-60').disabled = isLoading || !currentUser;
+            document.getElementById('btn-custom-add').disabled = isLoading || !currentUser;
+
+            if (isLoading) {
+                document.getElementById('total-spent').innerHTML = '<i data-lucide="loader-2" class="animate-spin text-yellow-400 w-6 h-6 mt-2"></i>';
+                document.getElementById('total-plays').textContent = '--';
+            } else {
+                const totalSpent = entries.reduce((sum, e) => sum + Number(e.amount), 0);
+                const totalPlays = Math.floor(totalSpent / 30);
+                document.getElementById('total-spent').textContent = `NT$ ${totalSpent}`;
+                document.getElementById('total-plays').textContent = totalPlays;
+            }
+
+            renderEntriesList();
+            lucide.createIcons();
+            renderPokeballIcons();
+        };
+
+        const renderEntriesList = () => {
+            const listEl = document.getElementById('entries-list');
+            if (isLoading) {
+                listEl.innerHTML = `
+                    <div class="text-center py-12 text-slate-400 flex flex-col items-center">
+                        <i data-lucide="loader-2" class="animate-spin text-red-400 mb-4 w-10 h-10"></i>
+                        <p class="font-bold text-slate-500">載入紀錄中...</p>
+                    </div>`;
+                return;
+            }
+
+            if (entries.length === 0) {
+                listEl.innerHTML = `
+                    <div class="text-center py-12 text-slate-400 flex flex-col items-center">
+                        <div class="pokeball-icon text-slate-200 mb-4 w-[64px] h-[64px]"></div>
+                        <p class="font-bold text-slate-500 text-lg">圖鑑空空如也！</p>
+                        <p class="text-sm mt-1 font-medium">去尋找傳說中的寶可夢吧！</p>
+                    </div>`;
+                return;
+            }
+
+            const sortedEntries = [...entries].sort((a, b) => {
+                const dateDiff = new Date(b.date) - new Date(a.date);
+                if (dateDiff !== 0) return dateDiff;
+                return (b.createdAt || 0) - (a.createdAt || 0);
+            });
+
+            listEl.innerHTML = sortedEntries.map(entry => {
+                const cardData = entry.cardId ? CARD_DB[entry.cardId.trim()] : null;
+                const safeEntryString = JSON.stringify(entry).replace(/"/g, '&quot;');
+                
+                let playerStyle = '';
+                let playerIcon = '';
+                if (entry.player === '姊姊') {
+                    playerStyle = 'bg-pink-100 border-pink-300 text-pink-600';
+                    playerIcon = '<i data-lucide="user" class="w-[20px] h-[20px]"></i>';
+                } else if (entry.player === '妹妹') {
+                    playerStyle = 'bg-purple-100 border-purple-300 text-purple-600';
+                    playerIcon = '<i data-lucide="user" class="w-[20px] h-[20px]"></i>';
+                } else {
+                    playerStyle = 'bg-orange-100 border-orange-300 text-orange-600';
+                    playerIcon = '<i data-lucide="users" class="w-[20px] h-[20px]"></i>';
+                }
+
+                let cardHtml = '';
+                if (cardData) {
+                    const starsHtml = Array(cardData.stars).fill('<i data-lucide="star" class="w-[10px] h-[10px] fill-yellow-500 text-yellow-500"></i>').join('');
+                    cardHtml = `
+                        <div class="w-12 h-12 bg-gradient-to-br from-yellow-100 to-amber-200 rounded-lg p-1 shrink-0 border border-yellow-300 shadow-sm relative">
+                            <img src="${getPokemonImageUrl(cardData.dex)}" alt="${cardData.name}" class="w-full h-full object-contain drop-shadow-md" />
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-1">
+                                <span class="font-black text-slate-800 truncate">${cardData.name}</span>
+                                <div class="flex text-yellow-500">${starsHtml}</div>
+                            </div>
+                            <div class="text-xs font-bold text-slate-400 font-mono mt-0.5">${entry.cardId}</div>
+                        </div>
+                    `;
+                } else {
+                    cardHtml = `
+                        <div class="flex-1 py-2 px-1">
+                            <p class="text-slate-400 text-sm italic flex items-center gap-1 font-medium hover:text-red-500 transition-colors">
+                                <i data-lucide="plus" class="w-[14px] h-[14px]"></i> 新增卡牌編號 (例: 1-2-001)
+                            </p>
+                        </div>
+                    `;
+                }
+
+                return `
+                    <div class="bg-white border-2 border-slate-200 p-3 rounded-2xl shadow-sm flex flex-col gap-2 relative group hover:border-red-300 transition-colors">
+                        <div class="flex justify-between items-start">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <div class="bg-slate-800 text-white text-xs font-bold px-2 py-1 rounded-lg flex items-center gap-1">
+                                    <i data-lucide="calendar" class="w-[12px] h-[12px]"></i> ${entry.date}
+                                </div>
+                                ${entry.location ? `
+                                <div class="bg-blue-100 text-blue-700 text-xs font-bold px-2 py-1 rounded-lg flex items-center gap-1 max-w-[120px] truncate">
+                                    <i data-lucide="map-pin" class="w-[12px] h-[12px] shrink-0"></i> <span class="truncate">${entry.location}</span>
+                                </div>` : ''}
+                            </div>
+                            <div class="font-black text-xl text-slate-700 ml-2">$${entry.amount}</div>
+                        </div>
+                        
+                        <div class="flex items-center gap-3 bg-slate-50 p-2 rounded-xl mt-1 border border-slate-100">
+                            <div class="flex flex-col items-center justify-center w-12 h-12 rounded-full shrink-0 border-2 shadow-sm ${playerStyle}">
+                                ${playerIcon}
+                                <span class="text-[10px] font-black mt-0.5">${entry.player || '一起'}</span>
+                            </div>
+                            
+                            <div class="flex-1 flex items-center gap-2 overflow-hidden cursor-pointer" onclick="window.openModalFromJSON('${safeEntryString}')">
+                                ${cardHtml}
+                            </div>
+                            
+                            <div class="flex flex-col gap-1 shrink-0">
+                                <button onclick="window.openModalFromJSON('${safeEntryString}')" class="p-1.5 text-blue-500 hover:bg-blue-100 rounded-lg">
+                                    <i data-lucide="edit-2" class="w-[16px] h-[16px]"></i>
+                                </button>
+                                <button onclick="window.confirmDelete('${entry.id}')" class="p-1.5 text-red-400 hover:bg-red-100 rounded-lg">
+                                    <i data-lucide="trash-2" class="w-[16px] h-[16px]"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        ${entry.note ? `
+                        <p class="text-slate-600 text-sm font-bold bg-white px-2 py-1 mt-1 rounded-md border border-slate-100">
+                            "${entry.note}"
+                        </p>` : ''}
+                    </div>
+                `;
+            }).join('');
+        };
+
+        const renderPlayerButtons = () => {
+            const btns = document.querySelectorAll('.player-btn');
+            btns.forEach(btn => {
+                const p = btn.dataset.player;
+                btn.className = `player-btn flex-1 py-2.5 rounded-xl font-black text-sm transition-all border-2 ${
+                    formData.player === p 
+                    ? (p === '姊姊' ? 'bg-pink-500 border-pink-600 text-white shadow-inner' : 
+                       p === '妹妹' ? 'bg-purple-500 border-purple-600 text-white shadow-inner' : 
+                       'bg-orange-500 border-orange-600 text-white shadow-inner')
+                    : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300 shadow-sm'
+                }`;
+            });
+        };
+
+        window.setPlayer = (player) => {
+            formData.player = player;
+            renderPlayerButtons();
+        };
+
+        window.updateCardPreview = () => {
+            const val = document.getElementById('input-cardId').value.toUpperCase();
+            formData.cardId = val;
+            const previewContainer = document.getElementById('card-preview-container');
+            const matchedCard = val ? CARD_DB[val.trim()] : null;
+
+            if (val) {
+                previewContainer.classList.remove('hidden');
+                previewContainer.classList.add('flex');
+                
+                if (matchedCard) {
+                    const starsHtml = Array(matchedCard.stars).fill('<i data-lucide="star" class="w-[12px] h-[12px] fill-yellow-400 text-yellow-400"></i>').join('');
+                    previewContainer.innerHTML = `
+                        <div class="w-14 h-14 bg-gradient-to-br from-yellow-200 to-yellow-500 rounded-lg p-1 border-2 border-yellow-300 relative overflow-hidden">
+                            <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-30 mix-blend-overlay"></div>
+                            <img src="${getPokemonImageUrl(matchedCard.dex)}" alt="${matchedCard.name}" class="w-full h-full object-contain drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] relative z-10" />
+                        </div>
+                        <div class="flex-1 text-white">
+                            <div class="font-black text-lg tracking-wide">${matchedCard.name}</div>
+                            <div class="flex text-yellow-400 mt-0.5">${starsHtml}</div>
+                        </div>
+                    `;
+                } else {
+                    previewContainer.innerHTML = `
+                        <div class="text-slate-400 text-sm font-bold py-2 px-1 flex items-center gap-2">
+                            <div class="pokeball-icon opacity-50 w-[20px] h-[20px]"></div>
+                            <span>資料庫中尚無此編號的圖片</span>
+                        </div>
+                    `;
+                }
+                lucide.createIcons();
+                renderPokeballIcons();
+            } else {
+                previewContainer.classList.add('hidden');
+                previewContainer.classList.remove('flex');
+            }
+        };
+
+        window.openModalFromJSON = (jsonStr) => {
+            try {
+                const entry = JSON.parse(jsonStr);
+                window.openModal(entry);
+            } catch(e) {
+                console.error("Parse error", e);
+            }
+        };
+
+        window.openModal = (entry = null) => {
+            if (entry) {
+                editingId = entry.id;
+                document.getElementById('modal-title').textContent = '編輯戰利品';
+                formData = {
+                    date: entry.date, 
+                    amount: entry.amount, 
+                    note: entry.note || '', 
+                    location: entry.location || '',
+                    player: entry.player || '一起',
+                    cardId: entry.cardId || ''
+                };
+            } else {
+                editingId = null;
+                document.getElementById('modal-title').textContent = '登錄戰利品';
+                formData = { date: getToday(), amount: 30, note: '', location: '', player: '一起', cardId: '' };
+            }
+            
+            document.getElementById('input-date').value = formData.date;
+            document.getElementById('input-amount').value = formData.amount;
+            document.getElementById('input-location').value = formData.location;
+            document.getElementById('input-note').value = formData.note;
+            document.getElementById('input-cardId').value = formData.cardId;
+            
+            renderPlayerButtons();
+            window.updateCardPreview();
+            
+            document.getElementById('modal').classList.remove('hidden');
+            document.getElementById('modal').classList.add('flex');
+        };
+
+        window.closeModal = () => {
+            document.getElementById('modal').classList.add('hidden');
+            document.getElementById('modal').classList.remove('flex');
+        };
+
+        window.handleGetLocation = () => {
+            if (!navigator.geolocation) return showToast('裝置不支援定位');
+            
+            const btnLoc = document.getElementById('btn-location');
+            const iconLoc = document.getElementById('icon-location');
+            const textLoc = document.getElementById('text-location');
+            
+            isLocating = true;
+            btnLoc.disabled = true;
+            textLoc.textContent = '定位中...';
+            iconLoc.outerHTML = '<i data-lucide="loader-2" id="icon-location" class="w-[12px] h-[12px] animate-spin"></i>';
+            lucide.createIcons();
+
+            navigator.geolocation.getCurrentPosition(
+                async (position) => {
+                    const { latitude, longitude } = position.coords;
+                    try {
+                        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`);
+                        const data = await res.json();
+                        const placeName = data.name || data.address?.amenity || data.address?.shop || data.address?.building || data.address?.road || '未知地點';
+                        document.getElementById('input-location').value = placeName;
+                        formData.location = placeName;
+                        showToast('已取得位置！');
+                    } catch (error) {
+                        const fallBackLoc = `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+                        document.getElementById('input-location').value = fallBackLoc;
+                        formData.location = fallBackLoc;
+                    }
+                    resetLocButton();
+                },
+                () => { 
+                    showToast('無法取得定位'); 
+                    resetLocButton(); 
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            );
+
+            function resetLocButton() {
+                isLocating = false;
+                btnLoc.disabled = false;
+                textLoc.textContent = '自動定位';
+                document.getElementById('icon-location').outerHTML = '<i data-lucide="locate-fixed" id="icon-location" class="w-[12px] h-[12px]"></i>';
+                lucide.createIcons();
+            }
+        };
+
+        window.handleSave = async () => {
+            if (!currentUser) return;
+            
+            formData.date = document.getElementById('input-date').value;
+            formData.amount = Number(document.getElementById('input-amount').value);
+            formData.location = document.getElementById('input-location').value;
+            formData.note = document.getElementById('input-note').value;
+            formData.cardId = document.getElementById('input-cardId').value.toUpperCase();
+
+            try {
+                if (editingId) {
+                    await updateDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'entries', editingId), { ...formData });
+                    showToast('紀錄已更新！');
+                } else {
+                    await addDoc(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'entries'), { ...formData, createdAt: Date.now() });
+                    showToast('已新增一筆紀錄！');
+                }
+                window.closeModal();
+            } catch (error) {
+                showToast("儲存失敗");
+            }
+        };
+
+        window.handleQuickAdd = async (amount) => {
+            if (!currentUser) return;
+            try {
+                const entriesRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'entries');
+                await addDoc(entriesRef, {
+                    date: getToday(), amount, note: '', location: '', player: amount === 60 ? '一起' : '一起', cardId: '', createdAt: Date.now()
+                });
+                showToast(`已記錄 ${amount} 元！可點擊編輯補上卡牌與玩家。`);
+            } catch (error) {
+                showToast("儲存失敗，請重試");
+            }
+        };
+
+        window.confirmDelete = async (id) => {
+            if (confirm("確定要刪除這筆紀錄嗎？")) {
+                if (!currentUser) return;
+                try {
+                    await deleteDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'entries', id));
+                    showToast('紀錄已刪除');
+                } catch (error) {
+                    showToast("刪除失敗");
+                }
+            }
+        };
+
+        const initAuth = async () => {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (error) {
+                console.error("登入失敗:", error);
+            }
+        };
+
+        initAuth();
+        onAuthStateChanged(auth, (user) => {
+            currentUser = user;
+            if (user) {
+                const entriesRef = collection(db, 'artifacts', appId, 'users', user.uid, 'entries');
+                onSnapshot(entriesRef, (snapshot) => {
+                    entries = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    isLoading = false;
+                    updateAppUI();
+                }, () => {
+                    showToast("無法載入歷史紀錄");
+                    isLoading = false;
+                    updateAppUI();
+                });
+            }
+        });
+
+        lucide.createIcons();
+        renderPokeballIcons();
+
+    </script>
+</body>
+</html>
