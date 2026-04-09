@@ -7,272 +7,355 @@
     <title>Mezastar 記帳本</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="機台圖鑑">
-    <link rel="apple-touch-icon" href="./pika.png">
-    <link rel="icon" type="image/png" href="./pika.png">
+    <meta name="apple-mobile-web-app-title" content="Mezastar 記帳本">
+    
+    <!-- PWA及圖示設定 -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#dc2626">
+    <link rel="icon" type="image/png" href="pika.png">
+    <link rel="apple-touch-icon" href="pika.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        .star-6 {
-            color: #f59e0b;
-            text-shadow: 0 0 8px rgba(245, 158, 11, 0.5);
+        .star-6 { color: #f59e0b; text-shadow: 0 0 8px rgba(245, 158, 11, 0.5); }
+        .star-5 { color: #eab308; }
+        .star-4 { color: #a3a3a3; }
+        .star-3 { color: #a3a3a3; }
+        .star-2 { color: #a3a3a3; }
+        .star-sp { color: #8b5cf6; text-shadow: 0 0 8px rgba(139, 92, 246, 0.5); }
+
+        .fade-in { animation: fadeIn 0.2s ease-out; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        .star-5 {
-            color: #eab308;
-        }
-
-        .star-4 {
-            color: #a3a3a3;
-        }
-
-        .star-3 {
-            color: #a3a3a3;
-        }
-
-        .star-2 {
-            color: #a3a3a3;
-        }
-
-        .star-sp {
-            color: #8b5cf6;
-            text-shadow: 0 0 8px rgba(139, 92, 246, 0.5);
-        }
-
-        .card-enter {
-            animation: cardSlideIn 0.3s ease-out;
-        }
-
-        @keyframes cardSlideIn {
-            from {
-                opacity: 0;
-                transform: translateY(-12px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes shimmer {
-            0% {
-                background-position: -200% 0;
-            }
-
-            100% {
-                background-position: 200% 0;
-            }
-        }
-
-        .shimmer-border {
-            background: linear-gradient(90deg, #f87171, #fbbf24, #34d399, #60a5fa, #a78bfa, #f87171);
-            background-size: 200% 100%;
-            animation: shimmer 3s linear infinite;
-        }
+        /* 隱藏捲軸但可滾動 */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s ease-out; }
     </style>
 </head>
 
 <body class="min-h-screen bg-slate-100 flex justify-center font-sans"
     style="background-image:radial-gradient(#cbd5e1 2px,transparent 2px);background-size:30px 30px;">
-    <div
-        class="w-full max-w-md bg-white shadow-2xl flex flex-col relative min-h-screen overflow-hidden border-x-4 border-slate-800">
-        <!-- Header -->
-        <header class="bg-red-600 text-white p-4 pt-6 pb-8 relative z-10 shrink-0 border-b-8 border-slate-800">
-            <div
-                class="absolute -bottom-5 left-1/2 -translate-x-1/2 w-10 h-10 bg-white rounded-full border-8 border-slate-800 z-20">
-            </div>
-            <div class="flex items-center justify-center gap-2 mb-2">
+    
+    <div class="w-full max-w-md bg-slate-50 shadow-2xl flex flex-col relative min-h-screen border-x-4 border-slate-800">
+        
+        <!-- 共用 Header -->
+        <header class="bg-red-600 text-white p-4 pt-6 pb-6 relative z-10 shrink-0 border-b-8 border-slate-800">
+            <div class="absolute -bottom-5 left-1/2 -translate-x-1/2 w-10 h-10 bg-slate-50 rounded-full border-8 border-slate-800 z-20"></div>
+            <div class="flex items-center justify-center gap-2">
                 <div class="pokeball-icon text-white w-[28px] h-[28px]"></div>
-                <h1 class="text-2xl font-black tracking-widest text-center" style="text-shadow:2px 2px 0 #1e293b;">
-                    Mezastar 記帳本</h1>
+                <h1 class="text-2xl font-black tracking-widest text-center" style="text-shadow:2px 2px 0 #1e293b;">Mezastar</h1>
             </div>
-            <p class="text-red-100 text-sm text-center font-bold">寶可夢圖鑑與花費紀錄</p>
+            <p id="header-subtitle" class="text-red-100 text-sm text-center font-bold mt-1">遊玩中心</p>
         </header>
 
-        <!-- 統計面板 -->
-        <div class="p-4 pt-8 shrink-0 relative z-0">
-            <div
-                class="bg-gradient-to-r from-slate-800 to-slate-900 rounded-2xl p-4 text-white shadow-[0_4px_0_#0f172a] border-2 border-slate-700">
-                <div class="flex justify-between items-center mb-3">
-                    <div>
-                        <p class="text-slate-300 text-sm mb-1 font-bold">累積花費</p>
-                        <div id="total-spent"
-                            class="text-3xl font-black text-yellow-400 tracking-wide flex items-center h-9">
-                            NT$ 0</div>
+        <!-- 主要內容區 -->
+        <main class="flex-1 overflow-y-auto pb-24 no-scrollbar relative z-0">
+            
+            <!-- ====== Tab 1: 遊玩 (Play) ====== -->
+            <div id="tab-play" class="tab-content active p-4">
+                
+                <!-- 全域定位區塊 -->
+                <div class="bg-white rounded-2xl p-3 border-2 border-slate-200 shadow-sm mb-4 flex items-center justify-between">
+                    <div class="flex items-center gap-2 overflow-hidden">
+                        <div class="bg-blue-100 p-2 rounded-xl shrink-0"><i data-lucide="map-pin" class="text-blue-600 w-5 h-5"></i></div>
+                        <div class="min-w-0">
+                            <p class="text-xs text-slate-400 font-bold">目前位置</p>
+                            <p id="global-location-text" class="text-sm font-black text-slate-700 truncate">尚未定位</p>
+                        </div>
                     </div>
-                    <div class="text-right">
-                        <p class="text-slate-300 text-sm mb-1 font-bold">估計遊玩</p>
-                        <div class="text-xl font-black flex items-center justify-end gap-1 text-white h-7">
-                            <div class="pokeball-icon text-red-400 w-[20px] h-[20px]"></div><span
-                                id="total-plays">0</span> 道
+                    <button onclick="window.更新全域定位()" id="btn-global-loc" class="bg-slate-100 hover:bg-slate-200 text-slate-600 p-2 rounded-xl transition-colors shrink-0">
+                        <i data-lucide="refresh-cw" id="icon-global-loc" class="w-5 h-5"></i>
+                    </button>
+                </div>
+
+                <!-- 快速記帳面板 -->
+                <div class="bg-white rounded-3xl p-4 border-2 border-slate-200 shadow-sm mb-4">
+                    <h2 class="text-sm font-black text-slate-600 mb-3 flex items-center gap-1"><i data-lucide="zap" class="text-yellow-500 w-[18px] h-[18px]" stroke-width="3"></i> 快速記帳面板</h2>
+                    
+                    <div class="flex gap-2 mb-4 bg-slate-100 p-1 rounded-2xl">
+                        <button onclick="window.切換首頁玩家('姊姊')" id="quick-p-sister" class="quick-player-btn flex-1 py-2 rounded-xl font-black text-sm transition-all text-slate-500">👧 姊姊</button>
+                        <button onclick="window.切換首頁玩家('一起')" id="quick-p-together" class="quick-player-btn flex-1 py-2 rounded-xl font-black text-sm transition-all bg-white shadow-sm text-orange-600 border border-slate-200">👫 一起</button>
+                        <button onclick="window.切換首頁玩家('妹妹')" id="quick-p-younger" class="quick-player-btn flex-1 py-2 rounded-xl font-black text-sm transition-all text-slate-500">👧 妹妹</button>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3 mb-3">
+                        <button onclick="window.首頁快速新增(30)" class="bg-yellow-50 hover:bg-yellow-100 border-2 border-yellow-400 text-yellow-800 py-3 rounded-2xl font-black text-lg flex flex-col items-center justify-center transition-transform active:scale-95 shadow-[0_4px_0_#facc15]">
+                            <span class="flex items-center gap-1">1 道</span>
+                            <span class="text-sm font-bold text-yellow-600 mt-1">+30元</span>
+                        </button>
+                        <button onclick="window.首頁快速新增(60)" class="bg-red-50 hover:bg-red-100 border-2 border-red-400 text-red-800 py-3 rounded-2xl font-black text-lg flex flex-col items-center justify-center transition-transform active:scale-95 shadow-[0_4px_0_#f87171]">
+                            <span class="flex items-center gap-1">2 道</span>
+                            <span class="text-sm font-bold text-red-600 mt-1">+60元</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 近期動態 -->
+                <h2 class="text-sm font-black text-slate-600 mb-2 px-1">最新動態</h2>
+                <div id="recent-list" class="space-y-2">
+                    <!-- Javascript 渲染近3筆 -->
+                </div>
+            </div>
+
+            <!-- ====== Tab 2: 圖鑑 (Pokedex) ====== -->
+            <div id="tab-pokedex" class="tab-content p-4">
+                <div class="flex justify-between items-center mb-4 px-1">
+                    <h2 class="text-sm font-black text-slate-600">戰利品收集冊</h2>
+                    <span id="pokedex-count" class="bg-red-100 text-red-600 text-xs font-black px-2 py-1 rounded-lg">0 張</span>
+                </div>
+                <!-- 新增：圖鑑過濾器 -->
+                <div class="flex gap-2 mb-4 bg-slate-100 p-1 rounded-2xl">
+                    <button onclick="window.設定圖鑑過濾('all')" id="filter-all" class="pokedex-filter-btn flex-1 py-1.5 rounded-xl font-black text-xs transition-all bg-white shadow-sm text-slate-700 border border-slate-200">總圖鑑</button>
+                    <button onclick="window.設定圖鑑過濾('姊姊')" id="filter-sister" class="pokedex-filter-btn flex-1 py-1.5 rounded-xl font-black text-xs transition-all text-slate-500">姊姊</button>
+                    <button onclick="window.設定圖鑑過濾('妹妹')" id="filter-younger" class="pokedex-filter-btn flex-1 py-1.5 rounded-xl font-black text-xs transition-all text-slate-500">妹妹</button>
+                </div>
+                <div id="pokedex-grid" class="grid grid-cols-3 gap-3">
+                    <!-- Javascript 渲染 -->
+                </div>
+            </div>
+
+            <!-- ====== Tab 3: 紀錄 (History) ====== -->
+            <div id="tab-history" class="tab-content p-4">
+                <div class="flex justify-between items-center mb-4 px-1">
+                    <h2 class="text-sm font-black text-slate-600">完整花費明細</h2>
+                </div>
+                <div id="history-list" class="space-y-3 pb-6">
+                    <!-- Javascript 渲染 -->
+                </div>
+            </div>
+
+            <!-- ====== Tab 4: 統計 (Stats) ====== -->
+            <div id="tab-stats" class="tab-content p-4">
+                <div class="bg-gradient-to-b from-slate-800 to-slate-950 rounded-[28px] p-5 pb-6 text-white shadow-[0_8px_0_#0f172a,0_15px_20px_rgba(0,0,0,0.4)] border-2 border-slate-700 mb-8 relative overflow-hidden">
+                    <!-- 裝飾背景圖案 -->
+                    <div class="absolute -right-8 -bottom-8 opacity-[0.08] w-48 h-48 pokeball-icon pointer-events-none"></div>
+                    <div class="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-blue-700/20 via-transparent to-transparent pointer-events-none"></div>
+
+                    <!-- 上半部：總花費與道數 -->
+                    <div class="flex justify-between items-start relative z-10">
+                        <!-- 左側：累積花費 -->
+                        <div>
+                            <p class="text-slate-400 text-[11px] font-bold mb-1 flex items-center gap-1">
+                                <i data-lucide="wallet" class="w-3.5 h-3.5"></i> 累積花費
+                            </p>
+                            <div id="stat-total-spent" class="text-4xl font-black text-yellow-400 tracking-wide drop-shadow-[0_0_8px_rgba(250,204,21,0.4)]">NT$ 0</div>
+                        </div>
+
+                        <!-- 右側：估計遊玩 -->
+                        <div class="text-right">
+                            <p class="text-slate-400 text-[11px] font-bold mb-1 flex items-center justify-end gap-1">
+                                <i data-lucide="gamepad-2" class="w-3.5 h-3.5"></i> 估計遊玩
+                            </p>
+                            <div class="text-3xl font-black text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]"><span id="stat-total-plays">0</span> <span class="text-sm text-slate-300 font-bold ml-0.5">道</span></div>
+                        </div>
+                    </div>
+
+                    <!-- 分隔線 (增加立體感凹槽設計) -->
+                    <div class="h-px bg-slate-950 my-5 relative z-10 border-b border-slate-700/60 shadow-[0_1px_0_rgba(255,255,255,0.05)] mx-1"></div>
+
+                    <!-- 下半部：三玩家統計 -->
+                    <div class="grid grid-cols-3 gap-2 relative z-10">
+                        <div class="flex flex-col items-center">
+                            <span class="text-xs text-slate-300 font-bold mb-1 tracking-wide">👧 姊姊</span>
+                            <span id="stat-p-sister" class="text-pink-400 font-black text-xl drop-shadow-[0_0_5px_rgba(244,114,182,0.3)]">$0</span>
+                        </div>
+                        <div class="flex flex-col items-center border-x-2 border-slate-800/80">
+                            <span class="text-xs text-slate-300 font-bold mb-1 tracking-wide">👧 妹妹</span>
+                            <span id="stat-p-younger" class="text-purple-400 font-black text-xl drop-shadow-[0_0_5px_rgba(192,132,252,0.3)]">$0</span>
+                        </div>
+                        <div class="flex flex-col items-center">
+                            <span class="text-xs text-slate-300 font-bold mb-1 tracking-wide">🧑🤝🧑 一起</span>
+                            <span id="stat-p-together" class="text-orange-400 font-black text-xl drop-shadow-[0_0_5px_rgba(251,146,60,0.3)]">$0</span>
                         </div>
                     </div>
                 </div>
-                <div class="grid grid-cols-3 gap-2 pt-3 border-t border-slate-700">
+                
+                <!-- 隱藏原本的卡片數量，以免 JS 報錯 -->
+                <span id="stat-total-cards" class="hidden">0</span>
+
+                <!-- 新增：出紫率/運氣指數 -->
+                <h2 class="text-sm font-black text-slate-600 mb-3 px-1">血統證明 (出卡率)</h2>
+                <div class="bg-white border-2 border-slate-200 rounded-2xl p-4 flex justify-around mb-6 shadow-sm">
                     <div class="text-center">
-                        <p class="text-[10px] text-pink-300 font-bold mb-0.5">👧 姊姊</p>
-                        <p id="stat-sister" class="text-sm font-black text-pink-400">$0</p>
+                        <p class="text-[10px] text-slate-400 font-bold mb-1">6星/SP 神卡率</p>
+                        <p id="stat-rate-6" class="text-xl font-black text-amber-500">0%</p>
                     </div>
+                    <div class="w-px bg-slate-200"></div>
                     <div class="text-center">
-                        <p class="text-[10px] text-purple-300 font-bold mb-0.5">👧 妹妹</p>
-                        <p id="stat-younger" class="text-sm font-black text-purple-400">$0</p>
+                        <p class="text-[10px] text-slate-400 font-bold mb-1">5星 以上機率</p>
+                        <p id="stat-rate-5" class="text-xl font-black text-yellow-500">0%</p>
                     </div>
-                    <div class="text-center">
-                        <p class="text-[10px] text-orange-300 font-bold mb-0.5">👫 一起</p>
-                        <p id="stat-together" class="text-sm font-black text-orange-400">$0</p>
+                </div>
+
+                <!-- 系統設定與備份 -->
+                <h2 class="text-sm font-black text-slate-600 mb-3 px-1">系統設定與資料安全</h2>
+                <div class="bg-white border-2 border-slate-200 rounded-2xl p-4 shadow-sm mb-4">
+                    <p class="text-xs text-slate-500 font-bold mb-3 leading-tight">由於資料僅存在您的手機瀏覽器內，強烈建議定期備份以免清除暫存時遺失。</p>
+                    <div class="flex gap-2">
+                        <button onclick="window.匯出資料()" class="flex-1 bg-green-50 text-green-600 border-2 border-green-200 py-3 rounded-xl font-black text-sm flex justify-center items-center gap-1 active:scale-95 transition-transform"><i data-lucide="download" class="w-5 h-5"></i> 備份資料</button>
+                        <input type="file" id="file-import" accept=".json" class="hidden" onchange="window.匯入資料(event)" />
+                        <button onclick="document.getElementById('file-import').click()" class="flex-1 bg-blue-50 text-blue-600 border-2 border-blue-200 py-3 rounded-xl font-black text-sm flex justify-center items-center gap-1 active:scale-95 transition-transform"><i data-lucide="upload" class="w-5 h-5"></i> 還原資料</button>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- 快速新增 -->
-        <div class="px-4 mb-4 shrink-0">
-            <h2 class="text-sm font-black text-slate-600 mb-3 flex items-center gap-1"><i data-lucide="plus"
-                    class="text-red-500 w-[18px] h-[18px]" stroke-width="3"></i> 隨手記一下 (今天)</h2>
-            <div class="grid grid-cols-2 gap-3">
-                <button onclick="window.快速新增(30)"
-                    class="bg-yellow-50 hover:bg-yellow-100 border-2 border-yellow-400 text-yellow-800 py-3 rounded-2xl font-black text-lg flex flex-col items-center justify-center transition-transform active:scale-95 shadow-[0_4px_0_#facc15]"><span
-                        class="flex items-center gap-1"><i data-lucide="zap"
-                            class="text-yellow-500 fill-yellow-500 w-[18px] h-[18px]"></i> 1 道</span><span
-                        class="text-sm font-bold text-yellow-600 mt-1">+30元</span></button>
-                <button onclick="window.快速新增(60)"
-                    class="bg-red-50 hover:bg-red-100 border-2 border-red-400 text-red-800 py-3 rounded-2xl font-black text-lg flex flex-col items-center justify-center transition-transform active:scale-95 shadow-[0_4px_0_#f87171]"><span
-                        class="flex items-center gap-1">
-                        <div class="pokeball-icon text-red-500 w-[18px] h-[18px]"></div> 2 道
-                    </span><span class="text-sm font-bold text-red-600 mt-1">+60元</span></button>
-            </div>
-        </div>
-
-        <!-- 紀錄列表 -->
-        <div class="flex-1 overflow-y-auto px-4 pb-24">
-            <div class="flex justify-between items-end mb-3 mt-2 sticky top-0 bg-white/90 backdrop-blur-sm py-2 z-10">
-                <h2 class="text-sm font-black text-slate-600 flex items-center gap-1"><i data-lucide="history"
-                        class="text-blue-500 w-[18px] h-[18px]" stroke-width="3"></i> 戰利品圖鑑</h2>
-                <button onclick="window.開啟記帳彈窗()" id="btn-custom-add"
-                    class="text-red-600 text-sm font-bold flex items-center gap-1 bg-red-100 px-3 py-1.5 rounded-xl hover:bg-red-200 transition-colors shadow-sm"><i
-                        data-lucide="plus" class="w-[16px] h-[16px]" stroke-width="3"></i> 新增</button>
-            </div>
-            <div id="entries-list" class="space-y-4">
-                <div class="text-center py-12 text-slate-400 flex flex-col items-center">
-                    <div class="pokeball-icon text-slate-200 mb-4 w-[64px] h-[64px]"></div>
-                    <p class="font-bold text-slate-500 text-lg">圖鑑空空如也！</p>
-                    <p class="text-sm mt-1 font-medium">去尋找傳說中的寶可夢吧！</p>
+            <!-- ====== Tab 5: 據點 (Map) ====== -->
+            <div id="tab-map" class="tab-content p-4">
+                <div class="flex justify-between items-center mb-3 px-1">
+                    <h2 class="text-sm font-black text-slate-600">機台設置據點</h2>
+                </div>
+                
+                <div class="bg-white rounded-3xl p-3 border-2 border-slate-200 shadow-sm mb-4 flex flex-col h-[65vh]">
+                    <p class="text-xs text-slate-500 font-bold mb-2 px-1 flex items-center gap-1"><i data-lucide="info" class="w-3 h-3 shrink-0"></i> 全台 Mezastar 機台據點總覽</p>
+                    <div class="w-full flex-1 rounded-2xl overflow-hidden bg-slate-100 relative border border-slate-200 min-h-[250px]">
+                        <!-- 內嵌自訂 Google 地圖 -->
+                        <iframe 
+                            width="100%" 
+                            height="100%" 
+                            frameborder="0" style="border:0; position:absolute; top:0; left:0; right:0; bottom:0;"
+                            src="https://www.google.com/maps/d/embed?mid=1P5i95AJDSdOFORq7UZdCDR3fefAplMQ&ll=23.607222947787587,120.6982466&z=7" 
+                            allowfullscreen>
+                        </iframe>
+                    </div>
+                    <div class="mt-3 grid grid-cols-2 gap-2 shrink-0">
+                        <a href="https://www.google.com/maps/d/viewer?mid=1P5i95AJDSdOFORq7UZdCDR3fefAplMQ" target="_blank" class="bg-blue-50 hover:bg-blue-100 border-2 border-blue-200 text-blue-700 py-3 rounded-xl font-black text-sm flex items-center justify-center gap-1 transition-colors shadow-sm">
+                            <i data-lucide="navigation" class="w-4 h-4"></i> 開啟地圖 App
+                        </a>
+                        <a href="https://pokemonmezastar.com.tw/" target="_blank" class="bg-red-50 hover:bg-red-100 border-2 border-red-200 text-red-700 py-3 rounded-xl font-black text-sm flex items-center justify-center gap-1 transition-colors shadow-sm">
+                            <i data-lucide="globe" class="w-4 h-4"></i> 官網查詢
+                        </a>
+                    </div>
                 </div>
             </div>
-        </div>
+
+        </main>
+
+        <!-- 全域懸浮新增按鈕 (Floating Action Button) -->
+        <button onclick="window.開啟記帳彈窗()" class="absolute bottom-20 right-5 bg-red-600 text-white w-14 h-14 rounded-full shadow-[0_4px_12px_rgba(220,38,38,0.6)] flex items-center justify-center z-40 hover:bg-red-500 active:scale-95 transition-transform border-2 border-red-800">
+            <i data-lucide="plus" class="w-8 h-8" stroke-width="3"></i>
+        </button>
+
+        <!-- ====== 底部導航 (Bottom Navigation) ====== -->
+        <nav class="absolute bottom-0 w-full bg-white border-t-2 border-slate-200 pb-safe z-40 rounded-t-2xl shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
+            <div class="flex justify-around items-center p-2">
+                <button onclick="window.切換分頁('play', '遊玩中心')" class="nav-btn active flex-1 flex flex-col items-center p-2 text-slate-400 hover:text-red-500 transition-colors" data-tab="play">
+                    <i data-lucide="gamepad-2" class="w-6 h-6 mb-1 nav-icon"></i>
+                    <span class="text-[10px] font-black">遊玩</span>
+                </button>
+                <button onclick="window.切換分頁('pokedex', '戰利品圖鑑')" class="nav-btn flex-1 flex flex-col items-center p-2 text-slate-400 hover:text-red-500 transition-colors" data-tab="pokedex">
+                    <i data-lucide="book-open" class="w-6 h-6 mb-1 nav-icon"></i>
+                    <span class="text-[10px] font-black">圖鑑</span>
+                </button>
+                <button onclick="window.切換分頁('history', '歷史紀錄')" class="nav-btn flex-1 flex flex-col items-center p-2 text-slate-400 hover:text-red-500 transition-colors" data-tab="history">
+                    <i data-lucide="list" class="w-6 h-6 mb-1 nav-icon"></i>
+                    <span class="text-[10px] font-black">紀錄</span>
+                </button>
+                <button onclick="window.切換分頁('stats', '數據統計')" class="nav-btn flex-1 flex flex-col items-center p-2 text-slate-400 hover:text-red-500 transition-colors" data-tab="stats">
+                    <i data-lucide="pie-chart" class="w-6 h-6 mb-1 nav-icon"></i>
+                    <span class="text-[10px] font-black">統計</span>
+                </button>
+                <button onclick="window.切換分頁('map', '機台據點')" class="nav-btn flex-1 flex flex-col items-center p-2 text-slate-400 hover:text-red-500 transition-colors" data-tab="map">
+                    <i data-lucide="map" class="w-6 h-6 mb-1 nav-icon"></i>
+                    <span class="text-[10px] font-black">據點</span>
+                </button>
+            </div>
+        </nav>
 
         <!-- Toast -->
-        <div id="toast"
-            class="absolute bottom-6 left-1/2 -translate-x-1/2 bg-slate-800 text-white px-4 py-2 rounded-full shadow-lg text-sm font-medium z-50 whitespace-nowrap animate-bounce hidden transition-opacity">
-        </div>
+        <div id="toast" class="absolute top-20 left-1/2 -translate-x-1/2 bg-slate-800 text-white px-5 py-3 rounded-full shadow-lg text-sm font-black z-50 whitespace-nowrap hidden transition-all"></div>
 
         <!-- 記帳彈窗 -->
-        <div id="modal"
-            class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
-            <div
-                class="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl border-4 border-slate-800 flex flex-col max-h-[90vh]">
-                <div
-                    class="bg-red-600 p-4 border-b-4 border-slate-800 flex justify-between items-center text-white shrink-0">
+        <div id="modal" class="absolute inset-0 bg-slate-900/70 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+            <div class="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl border-4 border-slate-800 flex flex-col max-h-[90vh]">
+                <div class="bg-red-600 p-4 border-b-4 border-slate-800 flex justify-between items-center text-white shrink-0">
                     <h3 class="font-black text-lg flex items-center gap-2">
-                        <div class="pokeball-icon w-[20px] h-[20px]"></div><span id="modal-title">登錄戰利品</span>
+                        <div class="pokeball-icon w-[20px] h-[20px]"></div><span id="modal-title">登錄詳細紀錄</span>
                     </h3>
-                    <button onclick="window.關閉記帳彈窗()"
-                        class="text-red-200 hover:text-white transition-colors bg-red-700 p-1 rounded-full"><i
-                            data-lucide="x" class="w-[20px] h-[20px]" stroke-width="3"></i></button>
+                    <button onclick="window.關閉記帳彈窗()" class="text-red-200 hover:text-white transition-colors bg-red-700 p-1 rounded-full"><i data-lucide="x" class="w-[20px] h-[20px]" stroke-width="3"></i></button>
                 </div>
-                <div class="p-5 space-y-4 bg-slate-50 overflow-y-auto">
+                <div class="p-5 space-y-4 bg-slate-50 overflow-y-auto no-scrollbar">
                     <!-- 玩家 -->
                     <div><label class="block text-sm font-black text-slate-700 mb-2">🎮 是誰玩的？</label>
                         <div class="flex gap-2" id="player-buttons">
-                            <button onclick="window.設定玩家('姊姊')" data-player="姊姊"
-                                class="player-btn flex-1 py-2.5 rounded-xl font-black text-sm transition-all border-2 bg-white border-slate-200 text-slate-500">姊姊</button>
-                            <button onclick="window.設定玩家('妹妹')" data-player="妹妹"
-                                class="player-btn flex-1 py-2.5 rounded-xl font-black text-sm transition-all border-2 bg-white border-slate-200 text-slate-500">妹妹</button>
-                            <button onclick="window.設定玩家('一起')" data-player="一起"
-                                class="player-btn flex-1 py-2.5 rounded-xl font-black text-sm transition-all border-2 bg-orange-500 border-orange-600 text-white shadow-inner">一起</button>
+                            <button onclick="window.設定表單玩家('姊姊')" data-player="姊姊" class="form-player-btn flex-1 py-2.5 rounded-xl font-black text-sm transition-all border-2 bg-white border-slate-200 text-slate-500">姊姊</button>
+                            <button onclick="window.設定表單玩家('一起')" data-player="一起" class="form-player-btn flex-1 py-2.5 rounded-xl font-black text-sm transition-all border-2 bg-orange-500 border-orange-600 text-white shadow-inner">一起</button>
+                            <button onclick="window.設定表單玩家('妹妹')" data-player="妹妹" class="form-player-btn flex-1 py-2.5 rounded-xl font-black text-sm transition-all border-2 bg-white border-slate-200 text-slate-500">妹妹</button>
                         </div>
                     </div>
-                    <!-- 卡片資訊區 -->
+                    
+                    <!-- 金額與日期 -->
+                    <div class="flex gap-3">
+                        <div class="flex-1"><label class="block text-sm font-black text-slate-700 mb-1 flex items-center gap-1"><i data-lucide="dollar-sign" class="w-[14px] h-[14px]"></i> 金額</label>
+                            <input type="number" id="input-amount" class="w-full border-2 border-slate-200 rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:border-red-400 bg-white font-black text-lg" />
+                        </div>
+                        <div class="flex-1"><label class="block text-sm font-black text-slate-700 mb-1 flex items-center gap-1"><i data-lucide="calendar" class="w-[14px] h-[14px]"></i> 日期</label>
+                            <input type="date" id="input-date" class="w-full border-2 border-slate-200 rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:border-red-400 bg-white text-sm font-bold" />
+                        </div>
+                    </div>
+
+                    <!-- 地點 -->
+                    <div>
+                        <label class="block text-sm font-black text-slate-700 mb-1 flex items-center gap-1"><i data-lucide="map-pin" class="w-[14px] h-[14px]"></i> 地點</label>
+                        <input type="text" id="input-location" placeholder="例：新光三越" class="w-full border-2 border-slate-200 rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:border-red-400 bg-white font-bold" />
+                    </div>
+
+                    <!-- 卡片資訊區 (加入自動帶入功能) -->
                     <div class="bg-white p-3 rounded-2xl border-2 border-slate-200 shadow-sm space-y-3">
-                        <p class="text-xs font-bold text-slate-400 flex items-center gap-1"><i data-lucide="credit-card"
-                                class="w-3 h-3"></i> 卡片資訊（選填）</p>
-                        <div class="grid grid-cols-2 gap-3">
-                            <div>
-                                <label class="block text-xs font-bold text-slate-600 mb-1">卡片代號</label>
-                                <input type="text" id="input-cardId" placeholder="1-1-001"
-                                    class="w-full border-2 border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-700 font-mono font-bold focus:outline-none focus:border-red-400 bg-slate-50 uppercase" />
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-slate-600 mb-1">卡片名稱</label>
-                                <input type="text" id="input-cardName" placeholder="皮卡丘"
-                                    class="w-full border-2 border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-700 focus:outline-none focus:border-red-400 bg-white" />
+                        <p class="text-xs font-bold text-slate-400 flex items-center gap-1"><i data-lucide="credit-card" class="w-3 h-3"></i> 戰利品資訊（輸入代號可自動抓取）</p>
+                        
+                        <!-- 代號與自動帶入按鈕 -->
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 mb-1">卡號 (例如: 1-1-001)</label>
+                            <div class="flex gap-2">
+                                <input type="text" id="input-cardId" placeholder="輸入卡號..." class="flex-1 border-2 border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-700 font-mono focus:outline-none focus:border-red-400 uppercase font-black" />
+                                <button onclick="window.自動帶入卡片()" class="bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-2 rounded-xl text-xs font-black flex items-center gap-1 transition-colors shrink-0">
+                                    <i data-lucide="search" class="w-4 h-4"></i> 自動帶入
+                                </button>
                             </div>
                         </div>
+
                         <div class="grid grid-cols-2 gap-3">
                             <div>
-                                <label class="block text-xs font-bold text-slate-600 mb-1">星級</label>
-                                <select id="input-stars"
-                                    class="w-full border-2 border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-700 focus:outline-none focus:border-red-400 bg-white font-bold">
+                                <label class="block text-[10px] font-bold text-slate-500 mb-1">名稱</label>
+                                <input type="text" id="input-cardName" class="w-full border-2 border-slate-200 rounded-xl px-2 py-1.5 text-sm text-slate-700 focus:outline-none focus:border-red-400" />
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-500 mb-1">星級</label>
+                                <select id="input-stars" class="w-full border-2 border-slate-200 rounded-xl px-2 py-1.5 text-sm text-slate-700 focus:outline-none focus:border-red-400 font-bold">
                                     <option value="0">-- 不選 --</option>
                                     <option value="6">⭐×6 Super Star</option>
                                     <option value="5">⭐×5 Star</option>
-                                    <option value="4">⭐×4 一般卡</option>
-                                    <option value="3">⭐×3 一般卡</option>
-                                    <option value="2">⭐×2 一般卡</option>
-                                    <option value="sp">💎 特別 Special</option>
+                                    <option value="4">⭐×4 一般</option>
+                                    <option value="3">⭐×3 一般</option>
+                                    <option value="2">⭐×2 一般</option>
+                                    <option value="sp">💎 Special</option>
                                 </select>
                             </div>
-                            <div>
-                                <label class="block text-xs font-bold text-slate-600 mb-1">圖片網址</label>
-                                <input type="url" id="input-imageUrl" placeholder="貼上圖片 URL"
-                                    class="w-full border-2 border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-700 focus:outline-none focus:border-red-400 bg-white" />
-                            </div>
                         </div>
-                        <!-- 即時預覽 -->
-                        <div id="card-preview"
-                            class="hidden p-2 bg-gradient-to-r from-slate-800 to-slate-700 rounded-xl items-center gap-3">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 mb-1">圖片 URL</label>
+                            <input type="url" id="input-imageUrl" class="w-full border-2 border-slate-200 rounded-xl px-2 py-1.5 text-sm text-slate-700 focus:outline-none focus:border-red-400" />
                         </div>
-                    </div>
-                    <!-- 日期 & 金額 -->
-                    <div class="flex gap-3">
-                        <div class="flex-1"><label
-                                class="block text-sm font-black text-slate-700 mb-1 flex items-center gap-1"><i
-                                    data-lucide="calendar" class="w-[14px] h-[14px]"></i> 日期</label><input type="date"
-                                id="input-date"
-                                class="w-full border-2 border-slate-200 rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:border-red-400 bg-white" />
-                        </div>
-                        <div class="flex-1"><label
-                                class="block text-sm font-black text-slate-700 mb-1 flex items-center gap-1"><i
-                                    data-lucide="dollar-sign" class="w-[14px] h-[14px]"></i> 金額</label><input
-                                type="number" id="input-amount"
-                                class="w-full border-2 border-slate-200 rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:border-red-400 bg-white font-bold" />
+
+                        <!-- 即時預覽區 -->
+                        <div id="card-preview" class="hidden p-2 bg-gradient-to-r from-slate-800 to-slate-700 rounded-xl items-center gap-3">
+                            <!-- JS 渲染 -->
                         </div>
                     </div>
-                    <!-- 地點 -->
-                    <div>
-                        <label
-                            class="block text-sm font-black text-slate-700 mb-1 flex items-center justify-between"><span
-                                class="flex items-center gap-1"><i data-lucide="map-pin" class="w-[14px] h-[14px]"></i>
-                                地點</span>
-                            <button onclick="window.取得定位()" id="btn-location"
-                                class="text-xs flex items-center gap-1 bg-blue-100 text-blue-700 px-2.5 py-1 rounded-lg hover:bg-blue-200 active:bg-blue-300 transition-colors font-bold disabled:opacity-50"><i
-                                    data-lucide="locate-fixed" id="icon-location" class="w-[12px] h-[12px]"></i><span
-                                    id="text-location">自動定位</span></button>
-                        </label>
-                        <input type="text" id="input-location" placeholder="例：新光三越、遠百 B1"
-                            class="w-full border-2 border-slate-200 rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:border-red-400 bg-white" />
-                    </div>
+                    
                     <!-- 備註 -->
-                    <div><label class="block text-sm font-black text-slate-700 mb-1 flex items-center gap-1"><i
-                                data-lucide="edit-2" class="w-[14px] h-[14px]"></i> 備註手札</label><textarea
-                            id="input-note" placeholder="記錄一下當時開心的心情吧！"
-                            class="w-full border-2 border-slate-200 rounded-xl px-3 py-2 text-slate-700 h-20 resize-none focus:outline-none focus:border-red-400 bg-white"></textarea>
+                    <div><label class="block text-sm font-black text-slate-700 mb-1 flex items-center gap-1"><i data-lucide="edit-2" class="w-[14px] h-[14px]"></i> 備註手札</label>
+                        <textarea id="input-note" placeholder="記錄一下當時開心的心情吧！" class="w-full border-2 border-slate-200 rounded-xl px-3 py-2 text-slate-700 h-16 resize-none focus:outline-none focus:border-red-400 bg-white text-sm"></textarea>
                     </div>
-                    <!-- 儲存按鈕 -->
-                    <button onclick="window.儲存紀錄()"
-                        class="w-full bg-red-600 hover:bg-red-500 text-white font-black text-lg py-3.5 rounded-2xl transition-transform active:scale-95 shadow-[0_4px_0_#991b1b] flex justify-center items-center gap-2 mt-2 border-2 border-red-800">
-                        <div class="pokeball-icon w-[20px] h-[20px]"></div> 登錄到圖鑑！
+                    
+                    <button onclick="window.儲存表單紀錄()" class="w-full bg-red-600 hover:bg-red-500 text-white font-black text-lg py-3.5 rounded-2xl transition-transform active:scale-95 shadow-[0_4px_0_#991b1b] flex justify-center items-center gap-2 mt-2 border-2 border-red-800">
+                        <div class="pokeball-icon w-[20px] h-[20px]"></div> 儲存紀錄
                     </button>
                 </div>
             </div>
@@ -280,122 +363,80 @@
     </div>
 
     <script>
-        // ==== 常數與工具 ====
+        // ==== 卡片微型資料庫 (內建常見高星級神卡) ====
+        // 使用 PokeAPI 高畫質官方插圖 (dex 是寶可夢的全國圖鑑編號)
+        const CardDatabase = {
+            "1-1-001": { name: "蒼響", stars: "6", dex: 888 },
+            "1-1-002": { name: "藏瑪然特", stars: "6", dex: 889 },
+            "1-1-003": { name: "皮卡丘", stars: "6", dex: 25 },
+            "1-1-004": { name: "噴火龍", stars: "6", dex: 6 },
+            "1-1-005": { name: "水箭龜", stars: "6", dex: 9 },
+            "1-1-006": { name: "妙蛙花", stars: "6", dex: 3 },
+            "1-2-001": { name: "超夢", stars: "6", dex: 150 },
+            "1-2-002": { name: "夢幻", stars: "6", dex: 151 },
+            "1-2-003": { name: "基格爾德", stars: "6", dex: 718 },
+            "1-2-004": { name: "達克萊伊", stars: "6", dex: 491 },
+            "1-3-001": { name: "烈空坐", stars: "6", dex: 384 },
+            "1-3-002": { name: "固拉多", stars: "6", dex: 383 },
+            "1-3-003": { name: "蓋歐卡", stars: "6", dex: 382 },
+            "1-4-001": { name: "無極汰那", stars: "6", dex: 890 },
+            "1-4-002": { name: "路卡利歐", stars: "6", dex: 448 },
+            "2-1-001": { name: "阿爾宙斯", stars: "6", dex: 493 },
+            "2-1-002": { name: "騎拉帝納", stars: "6", dex: 487 },
+            "2-2-001": { name: "洛奇亞", stars: "6", dex: 249 },
+            "2-2-002": { name: "鳳王", stars: "6", dex: 250 },
+            "2-3-001": { name: "帝牙盧卡", stars: "6", dex: 483 },
+            "2-3-002": { name: "帕路奇亞", stars: "6", dex: 484 },
+            "2-4-001": { name: "黑馬蕾冠王", stars: "6", dex: 898 },
+            "2-4-002": { name: "白馬蕾冠王", stars: "6", dex: 898 }
+        };
+
+        // ==== 基礎設定與工具 ====
         const K_紀錄 = 'mezastar_entries';
         const 取得今天 = () => new Date().toISOString().split('T')[0];
         const 寶貝球SVG = `<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><path d="M2 12h7"/><path d="M15 12h7"/></svg>`;
+        
+        let 紀錄清單 = [];
+        let 全域定位 = "";
+        let 首頁選擇玩家 = "一起";
+        let 表單選擇玩家 = "一起";
+        let 圖鑑過濾 = "all";
+        let 編輯ID = null;
+        let 提示計時器 = null;
 
         function 渲染寶貝球() { document.querySelectorAll('.pokeball-icon').forEach(el => { el.innerHTML = 寶貝球SVG; }); }
         function 重整圖示() { if (typeof lucide !== 'undefined') lucide.createIcons(); 渲染寶貝球(); }
 
-        // ==== 星級渲染 ====
-        function 取得星級顯示(stars) {
-            if (!stars || stars === '0') return '';
-            if (stars === 'sp') return '<span class="star-sp font-black text-xs">💎 Special</span>';
-            const n = Number(stars);
-            const cls = n >= 6 ? 'star-6' : n >= 5 ? 'star-5' : 'star-4';
-            return `<span class="${cls}">${'⭐'.repeat(n)}</span>`;
-        }
-        function 取得星級文字(stars) {
-            if (!stars || stars === '0') return '';
-            if (stars === 'sp') return '💎 Special';
-            return '⭐'.repeat(Number(stars));
-        }
-        function 取得星級小圖(stars) {
-            if (!stars || stars === '0') return '';
-            if (stars === 'sp') return `<span class="inline-flex items-center gap-0.5 star-sp"><i data-lucide="diamond" class="w-[10px] h-[10px] fill-violet-400 text-violet-400"></i><span class="text-[10px] font-black">SP</span></span>`;
-            const n = Number(stars);
-            const cls = n >= 6 ? 'fill-yellow-500 text-yellow-500' : n >= 5 ? 'fill-yellow-400 text-yellow-400' : 'fill-slate-400 text-slate-400';
-            return Array(n).fill(`<i data-lucide="star" class="w-[10px] h-[10px] ${cls}"></i>`).join('');
-        }
-
-        // ==== 應用程式狀態 ====
-        let 紀錄清單 = [];
-        let 編輯ID = null;
-        let 提示計時器 = null;
-        let 表單 = { date: 取得今天(), amount: 30, note: '', location: '', player: '一起', cardId: '', cardName: '', stars: '0', imageUrl: '' };
-
         function 顯示提示(msg) {
             const t = document.getElementById('toast'); t.textContent = msg;
-            t.classList.remove('hidden'); t.classList.add('flex');
+            t.classList.remove('hidden'); t.classList.add('flex', 'fade-in');
             if (提示計時器) clearTimeout(提示計時器);
-            提示計時器 = setTimeout(() => { t.classList.add('hidden'); t.classList.remove('flex'); }, 2500);
+            提示計時器 = setTimeout(() => { t.classList.add('hidden'); t.classList.remove('flex', 'fade-in'); }, 2000);
         }
 
-        // ==== 統計面板 ====
-        function 更新統計() {
-            const 總 = 紀錄清單.reduce((s, e) => s + Number(e.amount), 0);
-            document.getElementById('total-spent').textContent = `NT$ ${總.toLocaleString()}`;
-            document.getElementById('total-plays').textContent = Math.floor(總 / 30);
+        // ==== 自動帶入功能 ====
+        window.自動帶入卡片 = () => {
+            const idInput = document.getElementById('input-cardId');
+            const id = idInput.value.toUpperCase().trim();
+            if (!id) return 顯示提示('⚠️ 請先輸入卡片代號 (例: 1-1-001)');
 
-            const 姊 = 紀錄清單.filter(e => e.player === '姊姊').reduce((s, e) => s + Number(e.amount), 0);
-            const 妹 = 紀錄清單.filter(e => e.player === '妹妹').reduce((s, e) => s + Number(e.amount), 0);
-            const 共 = 紀錄清單.filter(e => e.player === '一起').reduce((s, e) => s + Number(e.amount), 0);
-            document.getElementById('stat-sister').textContent = `$${姊.toLocaleString()}`;
-            document.getElementById('stat-younger').textContent = `$${妹.toLocaleString()}`;
-            document.getElementById('stat-together').textContent = `$${共.toLocaleString()}`;
-        }
-
-        // ==== 主畫面 ====
-        function 更新主畫面() { 更新統計(); 渲染紀錄清單(); 重整圖示(); }
-
-        function 渲染紀錄清單() {
-            const el = document.getElementById('entries-list');
-            if (紀錄清單.length === 0) {
-                el.innerHTML = `<div class="text-center py-12 text-slate-400 flex flex-col items-center"><div class="pokeball-icon text-slate-200 mb-4 w-[64px] h-[64px]"></div><p class="font-bold text-slate-500 text-lg">圖鑑空空如也！</p><p class="text-sm mt-1 font-medium">去尋找傳說中的寶可夢吧！</p></div>`;
-                return;
-            }
-            const sorted = [...紀錄清單].sort((a, b) => {
-                const d = new Date(b.date) - new Date(a.date);
-                return d !== 0 ? d : (b.createdAt || 0) - (a.createdAt || 0);
-            });
-            el.innerHTML = sorted.map(entry => {
-                const safe = JSON.stringify(entry).replace(/"/g, '&quot;');
-                // 玩家樣式
-                let ps = '', pi = '';
-                if (entry.player === '姊姊') { ps = 'bg-pink-100 border-pink-300 text-pink-600'; pi = '<i data-lucide="user" class="w-[20px] h-[20px]"></i>'; }
-                else if (entry.player === '妹妹') { ps = 'bg-purple-100 border-purple-300 text-purple-600'; pi = '<i data-lucide="user" class="w-[20px] h-[20px]"></i>'; }
-                else { ps = 'bg-orange-100 border-orange-300 text-orange-600'; pi = '<i data-lucide="users" class="w-[20px] h-[20px]"></i>'; }
-
-                // 卡片區塊
-                let ch = '';
-                const hasCard = entry.cardName || entry.cardId || entry.imageUrl;
-                if (hasCard) {
-                    const 名稱 = entry.cardName || entry.cardId || '未知寶可夢';
-                    const 星 = 取得星級小圖(entry.stars);
-                    const imgHtml = entry.imageUrl
-                        ? `<img src="${entry.imageUrl}" alt="${名稱}" class="w-full h-full object-contain drop-shadow-md" onerror="this.parentNode.innerHTML='<div class=\\'pokeball-icon w-full h-full text-yellow-400\\'></div>';渲染寶貝球();"/>`
-                        : `<div class="pokeball-icon w-full h-full text-yellow-400"></div>`;
-                    ch = `<div class="w-12 h-12 bg-gradient-to-br from-yellow-100 to-amber-200 rounded-lg p-1 shrink-0 border border-yellow-300 shadow-sm">${imgHtml}</div>
-                    <div class="flex-1 min-w-0"><div class="flex items-center gap-1"><span class="font-black text-slate-800 truncate">${名稱}</span><div class="flex">${星}</div></div>
-                    ${entry.cardId ? `<div class="text-xs font-bold text-slate-400 font-mono mt-0.5">${entry.cardId}</div>` : ''}</div>`;
-                } else {
-                    ch = `<div class="flex-1 py-2 px-1"><p class="text-slate-400 text-sm italic flex items-center gap-1 font-medium"><i data-lucide="plus" class="w-[14px] h-[14px]"></i> 未登錄卡牌資訊</p></div>`;
+            const card = CardDatabase[id];
+            if (card) {
+                document.getElementById('input-cardName').value = card.name;
+                document.getElementById('input-stars').value = card.stars;
+                if (card.dex) {
+                    // 使用 PokeAPI 提供的官方高畫質圖片
+                    document.getElementById('input-imageUrl').value = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${card.dex}.png`;
                 }
+                window.更新卡片預覽();
+                顯示提示(`✅ 成功載入：${card.name}`);
+            } else {
+                顯示提示('🔍 資料庫無此卡片，請手動輸入');
+            }
+        };
 
-                return `<div class="bg-white border-2 border-slate-200 p-3 rounded-2xl shadow-sm flex flex-col gap-2 relative group hover:border-red-300 transition-colors card-enter">
-                    <div class="flex justify-between items-start"><div class="flex items-center gap-2 flex-wrap"><div class="bg-slate-800 text-white text-xs font-bold px-2 py-1 rounded-lg flex items-center gap-1"><i data-lucide="calendar" class="w-[12px] h-[12px]"></i> ${entry.date}</div>${entry.location ? `<div class="bg-blue-100 text-blue-700 text-xs font-bold px-2 py-1 rounded-lg flex items-center gap-1 max-w-[120px] truncate"><i data-lucide="map-pin" class="w-[12px] h-[12px] shrink-0"></i><span class="truncate">${entry.location}</span></div>` : ''}</div><div class="font-black text-xl text-slate-700 ml-2">$${entry.amount}</div></div>
-                    <div class="flex items-center gap-3 bg-slate-50 p-2 rounded-xl mt-1 border border-slate-100">
-                        <div class="flex flex-col items-center justify-center w-12 h-12 rounded-full shrink-0 border-2 shadow-sm ${ps}">${pi}<span class="text-[10px] font-black mt-0.5">${entry.player || '一起'}</span></div>
-                        <div class="flex-1 flex items-center gap-2 overflow-hidden cursor-pointer" onclick="window.開啟記帳彈窗J('${safe}')">${ch}</div>
-                        <div class="flex flex-col gap-1 shrink-0"><button onclick="window.開啟記帳彈窗J('${safe}')" class="p-1.5 text-blue-500 hover:bg-blue-100 rounded-lg"><i data-lucide="edit-2" class="w-[16px] h-[16px]"></i></button><button onclick="window.確認刪除('${entry.id}')" class="p-1.5 text-red-400 hover:bg-red-100 rounded-lg"><i data-lucide="trash-2" class="w-[16px] h-[16px]"></i></button></div>
-                    </div>${entry.note ? `<p class="text-slate-600 text-sm font-bold bg-white px-2 py-1 mt-1 rounded-md border border-slate-100">"${entry.note}"</p>` : ''}
-                </div>`;
-            }).join('');
-        }
-
-        // ==== 記帳彈窗 ====
-        function 渲染玩家按鈕() {
-            document.querySelectorAll('.player-btn').forEach(btn => {
-                const p = btn.dataset.player, a = 表單.player === p;
-                const c = p === '姊姊' ? 'bg-pink-500 border-pink-600' : p === '妹妹' ? 'bg-purple-500 border-purple-600' : 'bg-orange-500 border-orange-600';
-                btn.className = `player-btn flex-1 py-2.5 rounded-xl font-black text-sm transition-all border-2 ${a ? c + ' text-white shadow-inner' : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300 shadow-sm'}`;
-            });
-        }
-        window.設定玩家 = (p) => { 表單.player = p; 渲染玩家按鈕(); };
-
-        // 卡片即時預覽
-        function 更新卡片預覽() {
+        // ==== 卡片即時預覽 ====
+        window.更新卡片預覽 = () => {
             const name = document.getElementById('input-cardName').value.trim();
             const cardId = document.getElementById('input-cardId').value.trim();
             const stars = document.getElementById('input-stars').value;
@@ -410,34 +451,200 @@
             const imgHtml = imageUrl
                 ? `<img src="${imageUrl}" alt="${displayName}" class="w-full h-full object-contain drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] relative z-10" onerror="this.parentNode.innerHTML='<div class=\\'pokeball-icon w-full h-full text-yellow-100\\'></div>';渲染寶貝球();"/>`
                 : `<div class="pokeball-icon w-full h-full text-yellow-100"></div>`;
-            preview.innerHTML = `<div class="w-14 h-14 bg-gradient-to-br from-yellow-200 to-yellow-500 rounded-lg p-1 border-2 border-yellow-300 relative overflow-hidden">${imgHtml}</div>
-                <div class="flex-1 text-white"><div class="font-black text-lg tracking-wide">${displayName}</div><div class="flex text-yellow-400 mt-0.5">${星}</div>${cardId ? `<div class="text-xs text-slate-300 font-mono mt-0.5">${cardId.toUpperCase()}</div>` : ''}</div>`;
+            preview.innerHTML = `<div class="w-14 h-14 bg-gradient-to-br from-yellow-200 to-yellow-500 rounded-lg p-1 border-2 border-yellow-300 relative overflow-hidden shrink-0">${imgHtml}</div>
+                <div class="flex-1 text-white min-w-0"><div class="font-black text-lg tracking-wide truncate">${displayName}</div><div class="flex text-yellow-400 mt-0.5">${星}</div>${cardId ? `<div class="text-xs text-slate-300 font-mono mt-0.5">${cardId.toUpperCase()}</div>` : ''}</div>`;
             重整圖示();
-        }
+        };
 
-        window.開啟記帳彈窗J = (s) => { try { window.開啟記帳彈窗(JSON.parse(s)); } catch (e) { console.error(e); } };
+        // ==== 分頁切換 ====
+        window.切換分頁 = (tabId, title) => {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+            
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                if(btn.dataset.tab === tabId) {
+                    btn.classList.add('text-red-600'); btn.classList.remove('text-slate-400');
+                } else {
+                    btn.classList.remove('text-red-600'); btn.classList.add('text-slate-400');
+                }
+            });
+            document.getElementById('header-subtitle').textContent = title;
+            更新畫面();
+        };
 
-        window.開啟記帳彈窗 = (entry = null) => {
-            if (entry) {
-                編輯ID = entry.id;
-                document.getElementById('modal-title').textContent = '編輯戰利品';
-                表單 = { date: entry.date, amount: entry.amount, note: entry.note || '', location: entry.location || '', player: entry.player || '一起', cardId: entry.cardId || '', cardName: entry.cardName || '', stars: entry.stars || '0', imageUrl: entry.imageUrl || '' };
-            } else {
-                編輯ID = null;
-                document.getElementById('modal-title').textContent = '登錄戰利品';
-                表單 = { date: 取得今天(), amount: 30, note: '', location: '', player: '一起', cardId: '', cardName: '', stars: '0', imageUrl: '' };
+        // ==== 圖鑑過濾切換 ====
+        window.設定圖鑑過濾 = (filter) => {
+            圖鑑過濾 = filter;
+            更新畫面();
+        };
+
+        // ==== 快速面板玩家切換 ====
+        window.切換首頁玩家 = (p) => {
+            首頁選擇玩家 = p;
+            document.querySelectorAll('.quick-player-btn').forEach(btn => {
+                btn.classList.remove('bg-white', 'shadow-sm', 'border', 'border-slate-200', 'text-pink-600', 'text-purple-600', 'text-orange-600');
+                btn.classList.add('text-slate-500');
+                if((p === '姊姊' && btn.id === 'quick-p-sister') || (p === '妹妹' && btn.id === 'quick-p-younger') || (p === '一起' && btn.id === 'quick-p-together')) {
+                    btn.classList.add('bg-white', 'shadow-sm', 'border', 'border-slate-200');
+                    btn.classList.remove('text-slate-500');
+                    if(p === '姊姊') btn.classList.add('text-pink-600');
+                    if(p === '妹妹') btn.classList.add('text-purple-600');
+                    if(p === '一起') btn.classList.add('text-orange-600');
+                }
+            });
+        };
+
+        // ==== 定位系統 ====
+        window.更新全域定位 = () => {
+            if (!navigator.geolocation) return 顯示提示('裝置不支援定位');
+            const icon = document.getElementById('icon-global-loc');
+            const text = document.getElementById('global-location-text');
+            icon.classList.add('animate-spin'); text.textContent = '定位中...';
+            
+            navigator.geolocation.getCurrentPosition(async (pos) => {
+                const { latitude: lat, longitude: lon } = pos.coords;
+                try {
+                    const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`);
+                    const d = await r.json();
+                    全域定位 = d.name || d.address?.amenity || d.address?.shop || d.address?.building || d.address?.road || '未知地點';
+                    text.textContent = 全域定位; 顯示提示('📍 定位更新成功');
+                } catch { 
+                    全域定位 = `${lat.toFixed(4)}, ${lon.toFixed(4)}`; 
+                    text.textContent = 全域定位; 
+                }
+                icon.classList.remove('animate-spin');
+            }, () => { 
+                text.textContent = '定位失敗'; icon.classList.remove('animate-spin'); 
+            }, { enableHighAccuracy: true, timeout: 5000 });
+        };
+
+        // ==== 資料處理 ====
+        function 存到本地() { localStorage.setItem(K_紀錄, JSON.stringify(紀錄清單)); 更新畫面(); }
+
+        // 新增：資料匯出與還原
+        // 新增：資料匯出與還原
+        window.匯出資料 = () => {
+            if (紀錄清單.length === 0) return 顯示提示('沒有資料可以匯出喔！');
+            // 使用 JSON.stringify(..., null, 2) 讓輸出的 JSON 格式化排版，易於手動編輯與備份閱讀
+            const dataStr = JSON.stringify(紀錄清單, null, 2);
+            const blob = new Blob([dataStr], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Mezastar記帳備份_${取得今天()}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            顯示提示('✅ 備份檔已下載');
+        };
+
+        window.匯入資料 = (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (Array.isArray(data)) {
+                        // 簡單資料驗證，過濾掉不具備基礎欄位的錯誤資料
+                        const validData = data.filter(item => item.id && item.date && item.amount !== undefined);
+                        if (validData.length === 0) throw new Error('找不到有效的備份資料');
+
+                        if (confirm(`找到 ${validData.length} 筆備份資料。\n\n按「確定」將合併追加到現有資料中\n按「取消」則會完全覆蓋現有資料（需再次確認）`)) {
+                            // 合併
+                            const existingIds = new Set(紀錄清單.map(x => x.id));
+                            const newData = validData.filter(x => !existingIds.has(x.id));
+                            紀錄清單 = [...紀錄清單, ...newData];
+                            存到本地();
+                            顯示提示(`✅ 成功合併 ${newData.length} 筆新資料`);
+                        } else {
+                            // 覆蓋
+                            if (confirm('⚠️ 警告：現有「所有」資料都會被清除並替換成備份檔的資料，確定要覆蓋嗎？')) {
+                                紀錄清單 = validData;
+                                存到本地();
+                                顯示提示(`✅ 成功覆蓋為 ${validData.length} 筆備份資料`);
+                            } else {
+                                顯示提示('已取消匯入');
+                            }
+                        }
+                    } else { throw new Error('格式錯誤'); }
+                } catch (err) {
+                    顯示提示('❌ 檔案格式錯誤，無法還原');
+                    console.error(err);
+                }
+                event.target.value = ''; // 清除選擇狀態
+            };
+            reader.readAsText(file);
+        };
+
+        window.首頁快速新增 = (amount) => {
+            const 新紀錄 = {
+                id: Date.now().toString(),
+                date: 取得今天(),
+                amount: amount,
+                player: 首頁選擇玩家,
+                location: 全域定位,
+                note: '', cardId: '', cardName: '', stars: '0', imageUrl: '',
+                createdAt: Date.now()
+            };
+            紀錄清單.push(新紀錄);
+            存到本地();
+            顯示提示(`✅ 已幫 ${首頁選擇玩家} 紀錄 $${amount}`);
+        };
+
+        window.確認刪除 = (id) => {
+            if (confirm("確定要刪除這筆紀錄嗎？")) {
+                紀錄清單 = 紀錄清單.filter(e => e.id !== id);
+                存到本地();
+                顯示提示('🗑️ 紀錄已刪除');
             }
-            document.getElementById('input-date').value = 表單.date;
-            document.getElementById('input-amount').value = 表單.amount;
-            document.getElementById('input-location').value = 表單.location;
-            document.getElementById('input-note').value = 表單.note;
-            document.getElementById('input-cardId').value = 表單.cardId;
-            document.getElementById('input-cardName').value = 表單.cardName;
-            document.getElementById('input-stars').value = 表單.stars;
-            document.getElementById('input-imageUrl').value = 表單.imageUrl;
-            渲染玩家按鈕(); 更新卡片預覽();
-            document.getElementById('modal').classList.remove('hidden');
-            document.getElementById('modal').classList.add('flex');
+        };
+
+        // ==== 表單邏輯 ====
+        window.設定表單玩家 = (p) => {
+            表單選擇玩家 = p;
+            document.querySelectorAll('.form-player-btn').forEach(btn => {
+                const a = btn.dataset.player === p;
+                const c = p === '姊姊' ? 'bg-pink-500 border-pink-600 text-white' : p === '妹妹' ? 'bg-purple-500 border-purple-600 text-white' : 'bg-orange-500 border-orange-600 text-white';
+                if(a) {
+                    btn.className = `form-player-btn flex-1 py-2.5 rounded-xl font-black text-sm transition-all border-2 shadow-inner ${c}`;
+                } else {
+                    btn.className = `form-player-btn flex-1 py-2.5 rounded-xl font-black text-sm transition-all border-2 bg-white border-slate-200 text-slate-500`;
+                }
+            });
+        };
+
+        window.開啟記帳彈窗 = (id = null) => {
+            const modal = document.getElementById('modal');
+            if (typeof id === 'string' && id) { // 編輯模式
+                編輯ID = id;
+                const entry = 紀錄清單.find(e => e.id === id);
+                document.getElementById('modal-title').textContent = '編輯紀錄';
+                window.設定表單玩家(entry.player || '一起');
+                document.getElementById('input-date').value = entry.date;
+                document.getElementById('input-amount').value = entry.amount;
+                document.getElementById('input-location').value = entry.location || '';
+                document.getElementById('input-note').value = entry.note || '';
+                document.getElementById('input-cardName').value = entry.cardName || '';
+                document.getElementById('input-cardId').value = entry.cardId || '';
+                document.getElementById('input-stars').value = entry.stars || '0';
+                document.getElementById('input-imageUrl').value = entry.imageUrl || '';
+            } else { // 新增模式
+                編輯ID = null;
+                document.getElementById('modal-title').textContent = '登錄詳細紀錄';
+                window.設定表單玩家(首頁選擇玩家);
+                document.getElementById('input-date').value = 取得今天();
+                document.getElementById('input-amount').value = 30;
+                document.getElementById('input-location').value = 全域定位;
+                document.getElementById('input-note').value = '';
+                document.getElementById('input-cardName').value = '';
+                document.getElementById('input-cardId').value = '';
+                document.getElementById('input-stars').value = '0';
+                document.getElementById('input-imageUrl').value = '';
+            }
+            window.更新卡片預覽();
+            modal.classList.remove('hidden'); modal.classList.add('flex');
         };
 
         window.關閉記帳彈窗 = () => {
@@ -445,73 +652,188 @@
             document.getElementById('modal').classList.remove('flex');
         };
 
-        window.取得定位 = () => {
-            if (!navigator.geolocation) return 顯示提示('裝置不支援定位');
-            const btn = document.getElementById('btn-location'), txt = document.getElementById('text-location');
-            btn.disabled = true; txt.textContent = '定位中...';
-            document.getElementById('icon-location').outerHTML = '<i data-lucide="loader-2" id="icon-location" class="w-[12px] h-[12px] animate-spin"></i>'; 重整圖示();
-            navigator.geolocation.getCurrentPosition(async (pos) => {
-                const { latitude: lat, longitude: lon } = pos.coords;
-                try {
-                    const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`);
-                    const d = await r.json();
-                    const n = d.name || d.address?.amenity || d.address?.shop || d.address?.building || d.address?.road || '未知地點';
-                    document.getElementById('input-location').value = n; 表單.location = n; 顯示提示('已取得位置！');
-                } catch { const f = `${lat.toFixed(4)}, ${lon.toFixed(4)}`; document.getElementById('input-location').value = f; 表單.location = f; }
-                重置();
-            }, () => { 顯示提示('無法取得定位'); 重置(); }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
-            function 重置() { btn.disabled = false; txt.textContent = '自動定位'; document.getElementById('icon-location').outerHTML = '<i data-lucide="locate-fixed" id="icon-location" class="w-[12px] h-[12px]"></i>'; 重整圖示(); }
-        };
+        window.儲存表單紀錄 = () => {
+            const amount = Number(document.getElementById('input-amount').value);
+            if (!amount || amount <= 0) return 顯示提示('請輸入有效金額');
 
-        // ==== 紀錄增刪改 ====
-        function 存到本地(新) { 紀錄清單 = 新; localStorage.setItem(K_紀錄, JSON.stringify(紀錄清單)); 更新主畫面(); }
-
-        window.儲存紀錄 = () => {
-            表單.date = document.getElementById('input-date').value;
-            表單.amount = Number(document.getElementById('input-amount').value);
-            表單.location = document.getElementById('input-location').value;
-            表單.note = document.getElementById('input-note').value;
-            表單.cardId = document.getElementById('input-cardId').value.toUpperCase().trim();
-            表單.cardName = document.getElementById('input-cardName').value.trim();
-            表單.stars = document.getElementById('input-stars').value;
-            表單.imageUrl = document.getElementById('input-imageUrl').value.trim();
-
-            if (!表單.amount || 表單.amount <= 0) return 顯示提示('請輸入有效金額');
+            const 資料 = {
+                date: document.getElementById('input-date').value,
+                amount: amount,
+                player: 表單選擇玩家,
+                location: document.getElementById('input-location').value,
+                note: document.getElementById('input-note').value,
+                cardName: document.getElementById('input-cardName').value.trim(),
+                cardId: document.getElementById('input-cardId').value.toUpperCase().trim(),
+                stars: document.getElementById('input-stars').value,
+                imageUrl: document.getElementById('input-imageUrl').value.trim(),
+            };
 
             if (編輯ID) {
-                存到本地(紀錄清單.map(e => e.id === 編輯ID ? { ...表單, id: 編輯ID, createdAt: e.createdAt } : e));
+                紀錄清單 = 紀錄清單.map(e => e.id === 編輯ID ? { ...資料, id: 編輯ID, createdAt: e.createdAt } : e);
                 顯示提示('紀錄已更新！');
             } else {
-                存到本地([...紀錄清單, { ...表單, id: Date.now().toString(), createdAt: Date.now() }]);
-                顯示提示('已新增一筆紀錄！');
+                紀錄清單.push({ ...資料, id: Date.now().toString(), createdAt: Date.now() });
+                顯示提示('已新增紀錄！');
             }
+            存到本地();
             window.關閉記帳彈窗();
         };
 
-        window.快速新增 = (amount) => {
-            存到本地([...紀錄清單, { id: Date.now().toString(), date: 取得今天(), amount, note: '', location: '', player: '一起', cardId: '', cardName: '', stars: '0', imageUrl: '', createdAt: Date.now() }]);
-            顯示提示(`已記錄 ${amount} 元！`);
-        };
+        // ==== 渲染輔助函式 ====
+        function 取得星級小圖(stars) {
+            if (!stars || stars === '0') return '';
+            if (stars === 'sp') return `<span class="inline-flex items-center star-sp"><i data-lucide="diamond" class="w-3 h-3 fill-violet-400 text-violet-400"></i></span>`;
+            const n = Number(stars);
+            const cls = n >= 6 ? 'fill-yellow-500 text-yellow-500' : n >= 5 ? 'fill-yellow-400 text-yellow-400' : 'fill-slate-400 text-slate-400';
+            return Array(n).fill(`<i data-lucide="star" class="w-3 h-3 ${cls}"></i>`).join('');
+        }
 
-        window.確認刪除 = (id) => {
-            if (confirm("確定要刪除這筆紀錄嗎？")) {
-                存到本地(紀錄清單.filter(e => e.id !== id));
-                顯示提示('紀錄已刪除');
-            }
-        };
+        function 產生玩家標籤(player) {
+            if (player === '姊姊') return `<span class="bg-pink-100 text-pink-600 px-2 py-0.5 rounded-md text-[10px] font-black">姊姊</span>`;
+            if (player === '妹妹') return `<span class="bg-purple-100 text-purple-600 px-2 py-0.5 rounded-md text-[10px] font-black">妹妹</span>`;
+            return `<span class="bg-orange-100 text-orange-600 px-2 py-0.5 rounded-md text-[10px] font-black">一起</span>`;
+        }
 
-        // ==== 事件綁定 ====
-        document.addEventListener('DOMContentLoaded', () => {
-            // 即時預覽
-            ['input-cardId', 'input-cardName', 'input-stars', 'input-imageUrl'].forEach(id => {
-                document.getElementById(id).addEventListener('input', 更新卡片預覽);
-                document.getElementById(id).addEventListener('change', 更新卡片預覽);
+        function 產生歷史清單HTML(entries, isCompact = false) {
+            if (entries.length === 0) return `<div class="text-center py-8 text-slate-400 font-bold text-sm">目前沒有紀錄喔！</div>`;
+            return entries.map(entry => {
+                const 名稱 = entry.cardName || entry.cardId;
+                const 標籤 = 產生玩家標籤(entry.player);
+                const 星 = 取得星級小圖(entry.stars);
+                
+                let contentHtml = '';
+                if (名稱) {
+                    contentHtml = `
+                        <div class="flex items-center gap-2 flex-1 min-w-0">
+                            <div class="w-8 h-8 bg-yellow-100 rounded-lg p-0.5 shrink-0 flex items-center justify-center">
+                                ${entry.imageUrl ? `<img src="${entry.imageUrl}" class="w-full h-full object-contain" onerror="this.style.display='none'">` : '<div class="pokeball-icon text-yellow-400 w-5 h-5"></div>'}
+                            </div>
+                            <div class="min-w-0"><div class="text-sm font-black text-slate-800 truncate leading-tight">${名稱}</div><div class="flex">${星}</div></div>
+                        </div>
+                    `;
+                } else {
+                    contentHtml = `<div class="text-xs text-slate-400 font-bold italic flex items-center gap-1 flex-1"><i data-lucide="ghost" class="w-3 h-3"></i> 純記帳</div>`;
+                }
+
+                let actionHtml = !isCompact ? `
+                    <div class="flex gap-1 shrink-0 ml-2 border-l border-slate-200 pl-2">
+                        <!-- 編輯與刪除按鈕變得更明顯 -->
+                        <button onclick="window.開啟記帳彈窗('${entry.id}')" class="p-2 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors font-bold"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
+                        <button onclick="window.確認刪除('${entry.id}')" class="p-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition-colors font-bold"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    </div>
+                ` : '';
+
+                let middleBar = '';
+                if (名稱 || entry.note || !isCompact) {
+                    middleBar = `
+                    <div class="flex items-center justify-between bg-slate-50 p-2 rounded-xl border border-slate-100 mt-2">
+                        ${contentHtml}
+                        ${actionHtml}
+                    </div>`;
+                }
+
+                return `
+                <div class="bg-white border border-slate-200 p-3 rounded-2xl shadow-sm flex flex-col relative group fade-in">
+                    <div class="flex justify-between items-start">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span class="text-xs font-bold text-slate-500">${entry.date.substring(5)}</span>
+                            ${標籤}
+                            ${entry.location ? `<span class="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded flex items-center gap-0.5 max-w-[100px] truncate"><i data-lucide="map-pin" class="w-3 h-3 shrink-0"></i><span class="truncate">${entry.location}</span></span>` : ''}
+                        </div>
+                        <div class="font-black text-lg text-slate-700">$${entry.amount}</div>
+                    </div>
+                    ${middleBar}
+                    ${entry.note ? `<p class="text-slate-600 text-xs font-bold px-1 mt-1 truncate">💬 ${entry.note}</p>` : ''}
+                </div>`;
+            }).join('');
+        }
+
+        // ==== 主畫面更新 ====
+        function 更新畫面() {
+            const sorted = [...紀錄清單].sort((a, b) => new Date(b.date) - new Date(a.date) || b.createdAt - a.createdAt);
+            
+            // 1. 遊玩頁 - 近期3筆
+            document.getElementById('recent-list').innerHTML = 產生歷史清單HTML(sorted.slice(0, 3), true);
+            
+            // 更新圖鑑過濾器按鈕狀態
+            document.querySelectorAll('.pokedex-filter-btn').forEach(btn => {
+                btn.classList.remove('bg-white', 'shadow-sm', 'border', 'border-slate-200', 'text-slate-700', 'text-pink-600', 'text-purple-600', 'text-orange-600');
+                btn.classList.add('text-slate-500');
+                const p = btn.id.replace('filter-', '');
+                if (p === 'all' && 圖鑑過濾 === 'all') {
+                    btn.classList.add('bg-white', 'shadow-sm', 'border', 'border-slate-200', 'text-slate-700');
+                    btn.classList.remove('text-slate-500');
+                } else if (p === 'sister' && 圖鑑過濾 === '姊姊') {
+                    btn.classList.add('bg-white', 'shadow-sm', 'border', 'border-slate-200', 'text-pink-600');
+                    btn.classList.remove('text-slate-500');
+                } else if (p === 'younger' && 圖鑑過濾 === '妹妹') {
+                    btn.classList.add('bg-white', 'shadow-sm', 'border', 'border-slate-200', 'text-purple-600');
+                    btn.classList.remove('text-slate-500');
+                }
             });
-            // 啟動
-            try { 紀錄清單 = JSON.parse(localStorage.getItem(K_紀錄) || '[]'); } catch { 紀錄清單 = []; }
-            更新主畫面();
+
+            // 2. 圖鑑頁 - 網格
+            const allCards = sorted.filter(e => e.cardName || e.cardId || e.imageUrl);
+            const cards = 圖鑑過濾 === 'all' ? allCards : allCards.filter(e => e.player === 圖鑑過濾);
+
+            document.getElementById('pokedex-count').textContent = `${cards.length} 張`;
+            const gridEl = document.getElementById('pokedex-grid');
+            if(cards.length === 0) {
+                gridEl.innerHTML = `<div class="col-span-3 text-center py-10 text-slate-400 font-bold text-sm"><i data-lucide="box" class="w-8 h-8 mx-auto mb-2 opacity-50"></i> 尚未登錄任何卡片</div>`;
+            } else {
+                gridEl.innerHTML = cards.map(c => `
+                    <div class="bg-white rounded-xl p-1 border-2 border-slate-200 shadow-sm flex flex-col items-center relative aspect-[3/4] justify-center fade-in cursor-pointer hover:border-red-400 transition-colors" onclick="window.切換分頁('history', '歷史紀錄'); window.開啟記帳彈窗('${c.id}')">
+                        <div class="absolute top-1 left-1 flex">${取得星級小圖(c.stars)}</div>
+                        <div class="w-12 h-12 mb-1 flex items-center justify-center">
+                            ${c.imageUrl ? `<img src="${c.imageUrl}" class="max-w-full max-h-full object-contain" onerror="this.style.display='none'">` : '<div class="pokeball-icon text-yellow-300 w-8 h-8"></div>'}
+                        </div>
+                        <div class="text-[10px] font-black text-slate-700 w-full text-center truncate px-1">${c.cardName || c.cardId}</div>
+                    </div>
+                `).join('');
+            }
+
+            // 3. 歷史紀錄
+            document.getElementById('history-list').innerHTML = 產生歷史清單HTML(sorted);
+
+            // 4. 統計資料
+            const 總額 = sorted.reduce((s, e) => s + Number(e.amount), 0);
+            document.getElementById('stat-total-spent').textContent = `NT$ ${總額.toLocaleString()}`;
+            document.getElementById('stat-total-plays').textContent = Math.floor(總額 / 30);
+            document.getElementById('stat-total-cards').textContent = cards.length;
+            
+            const 姊 = sorted.filter(e => e.player === '姊姊').reduce((s, e) => s + Number(e.amount), 0);
+            const 妹 = sorted.filter(e => e.player === '妹妹').reduce((s, e) => s + Number(e.amount), 0);
+            const 共 = sorted.filter(e => e.player === '一起').reduce((s, e) => s + Number(e.amount), 0);
+            document.getElementById('stat-p-sister').textContent = `$${姊}`;
+            document.getElementById('stat-p-younger').textContent = `$${妹}`;
+            document.getElementById('stat-p-together').textContent = `$${共}`;
+
+            // 新增：計算血統證明 (出卡率)
+            const 總道數 = Math.floor(總額 / 30);
+            const 神卡數 = cards.filter(c => c.stars === '6' || c.stars === 'sp').length;
+            const 五星以上數 = cards.filter(c => c.stars === '6' || c.stars === 'sp' || c.stars === '5').length;
+            
+            document.getElementById('stat-rate-6').textContent = 總道數 > 0 ? `${((神卡數 / 總道數) * 100).toFixed(1)}%` : '0%';
+            document.getElementById('stat-rate-5').textContent = 總道數 > 0 ? `${((五星以上數 / 總道數) * 100).toFixed(1)}%` : '0%';
+
+            重整圖示();
+        }
+
+        // ==== 啟動 ====
+        document.addEventListener('DOMContentLoaded', () => {
+            // 即時預覽綁定
+            ['input-cardId', 'input-cardName', 'input-stars', 'input-imageUrl'].forEach(id => {
+                document.getElementById(id).addEventListener('input', window.更新卡片預覽);
+                document.getElementById(id).addEventListener('change', window.更新卡片預覽);
+            });
+
+            try { 
+                紀錄清單 = JSON.parse(localStorage.getItem(K_紀錄) || '[]'); 
+            } catch { 紀錄清單 = []; }
+            
+            window.切換首頁玩家('一起'); // 初始化首頁選人
+            更新畫面();
         });
     </script>
 </body>
-
 </html>

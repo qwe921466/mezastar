@@ -1,0 +1,21 @@
+{
+  "name": "Mezastar 記帳本",
+  "short_name": "Mezastar",
+  "description": "Mezastar 機台戰利品與花費紀錄記帳本",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#dc2626",
+  "icons": [
+    {
+      "src": "pika.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "pika.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
