@@ -8,14 +8,14 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Mezastar 記帳本">
-    
+
     <!-- PWA及圖示設定 -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#dc2626">
     <link rel="icon" type="image/png" href="pika.png">
     <link rel="apple-touch-icon" href="pika.png">
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/lucide@latest" defer></script>
     <style>
         .star-6 { color: #f59e0b; text-shadow: 0 0 8px rgba(245, 158, 11, 0.5); }
         .star-5 { color: #eab308; }
@@ -33,17 +33,44 @@
         /* 隱藏捲軸但可滾動 */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        
+
+        html, body { height: 100%; }
+        .app-shell {
+            height: 100dvh;
+            max-height: 100dvh;
+            overflow: hidden;
+        }
+        @supports not (height: 100dvh) {
+            .app-shell {
+                height: 100vh;
+                max-height: 100vh;
+            }
+        }
+
         .tab-content { display: none; }
         .tab-content.active { display: block; animation: fadeIn 0.3s ease-out; }
+        .pb-safe { padding-bottom: max(0.5rem, env(safe-area-inset-bottom)); }
+        .qr-lock-card {
+            transform-origin: center;
+            transition: transform 0.2s ease-out;
+            will-change: transform;
+        }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                scroll-behavior: auto !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
     </style>
 </head>
 
-<body class="min-h-screen bg-slate-100 flex justify-center font-sans"
+<body class="h-[100dvh] overflow-hidden bg-slate-100 flex justify-center font-sans"
     style="background-image:radial-gradient(#cbd5e1 2px,transparent 2px);background-size:30px 30px;">
-    
-    <div class="w-full max-w-md bg-slate-50 shadow-2xl flex flex-col relative min-h-screen border-x-4 border-slate-800">
-        
+
+    <div class="app-shell w-full max-w-md bg-slate-50 shadow-2xl flex flex-col relative h-[100dvh] max-h-[100dvh] overflow-hidden border-x-4 border-slate-800">
+
         <!-- 共用 Header -->
         <header class="bg-red-600 text-white p-4 pt-6 pb-6 relative z-10 shrink-0 border-b-8 border-slate-800">
             <div class="absolute -bottom-5 left-1/2 -translate-x-1/2 w-10 h-10 bg-slate-50 rounded-full border-8 border-slate-800 z-20"></div>
@@ -55,15 +82,15 @@
         </header>
 
         <!-- 主要內容區 -->
-        <main class="flex-1 overflow-y-auto pb-24 no-scrollbar relative z-0">
-            
+        <main class="flex-1 min-h-0 overflow-y-auto pb-28 no-scrollbar relative z-0">
+
             <!-- ====== Tab 1: 遊玩 (Play) ====== -->
             <div id="tab-play" class="tab-content active p-4">
-                
+
                 <!-- 玩家登入 QR Code 卡片 -->
                 <button onclick="window.開啟QRCode()" class="w-full bg-slate-800 hover:bg-slate-700 rounded-2xl p-3 mb-3 border-2 border-slate-700 shadow-sm flex items-center gap-3 transition-transform active:scale-95 text-left group">
                     <div class="w-12 h-12 bg-white rounded-xl p-1 shrink-0 overflow-hidden border-2 border-slate-600 flex items-center justify-center">
-                        <img src="./qrcode.jpg" alt="QR 縮圖" class="w-full h-full object-contain">
+                        <img src="./qrcode.jpg" alt="QR 縮圖" class="w-full h-full object-contain" loading="lazy" decoding="async">
                     </div>
                     <div class="flex-1 min-w-0">
                         <p class="text-white font-black text-sm flex items-center gap-1.5"><i data-lucide="scan-line" class="w-[18px] h-[18px] text-green-400"></i> 玩家登入碼</p>
@@ -91,7 +118,7 @@
                 <!-- 快速記帳面板 -->
                 <div class="bg-white rounded-3xl p-4 border-2 border-slate-200 shadow-sm mb-4">
                     <h2 class="text-sm font-black text-slate-600 mb-3 flex items-center gap-1"><i data-lucide="zap" class="text-yellow-500 w-[18px] h-[18px]" stroke-width="3"></i> 快速記帳面板</h2>
-                    
+
                     <div class="flex gap-2 mb-4 bg-slate-100 p-1 rounded-2xl">
                         <button onclick="window.切換首頁玩家('姊姊')" id="quick-p-sister" class="quick-player-btn flex-1 py-2 rounded-xl font-black text-sm transition-all text-slate-500">👧 姊姊</button>
                         <button onclick="window.切換首頁玩家('一起')" id="quick-p-together" class="quick-player-btn flex-1 py-2 rounded-xl font-black text-sm transition-all bg-white shadow-sm text-orange-600 border border-slate-200">👫 一起</button>
@@ -189,7 +216,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- 隱藏原本的卡片數量，以免 JS 報錯 -->
                 <span id="stat-total-cards" class="hidden">0</span>
 
@@ -224,24 +251,24 @@
                 <div class="flex justify-between items-center mb-3 px-1">
                     <h2 class="text-sm font-black text-slate-600">機台設置據點</h2>
                 </div>
-                
+
                 <div class="bg-white rounded-3xl p-3 border-2 border-slate-200 shadow-sm mb-4 flex flex-col h-[65vh]">
                     <p class="text-xs text-slate-500 font-bold mb-2 px-1 flex items-center gap-1"><i data-lucide="info" class="w-3 h-3 shrink-0"></i> 全台 Mezastar 機台據點總覽</p>
                     <div class="w-full flex-1 rounded-2xl overflow-hidden bg-slate-100 relative border border-slate-200 min-h-[250px]">
                         <!-- 內嵌自訂 Google 地圖 -->
-                        <iframe 
-                            width="100%" 
-                            height="100%" 
+                        <iframe
+                            width="100%"
+                            height="100%"
                             frameborder="0" style="border:0; position:absolute; top:0; left:0; right:0; bottom:0;"
-                            src="https://www.google.com/maps/d/embed?mid=1P5i95AJDSdOFORq7UZdCDR3fefAplMQ&ll=23.607222947787587,120.6982466&z=7" 
+                            src="https://www.google.com/maps/d/embed?mid=1P5i95AJDSdOFORq7UZdCDR3fefAplMQ&ll=23.607222947787587,120.6982466&z=7"
                             allowfullscreen>
                         </iframe>
                     </div>
                     <div class="mt-3 grid grid-cols-2 gap-2 shrink-0">
-                        <a href="https://www.google.com/maps/d/viewer?mid=1P5i95AJDSdOFORq7UZdCDR3fefAplMQ" target="_blank" class="bg-blue-50 hover:bg-blue-100 border-2 border-blue-200 text-blue-700 py-3 rounded-xl font-black text-sm flex items-center justify-center gap-1 transition-colors shadow-sm">
+                        <a href="https://www.google.com/maps/d/viewer?mid=1P5i95AJDSdOFORq7UZdCDR3fefAplMQ" target="_blank" rel="noopener noreferrer" class="bg-blue-50 hover:bg-blue-100 border-2 border-blue-200 text-blue-700 py-3 rounded-xl font-black text-sm flex items-center justify-center gap-1 transition-colors shadow-sm">
                             <i data-lucide="navigation" class="w-4 h-4"></i> 開啟地圖 App
                         </a>
-                        <a href="https://pokemonmezastar.com.tw/" target="_blank" class="bg-red-50 hover:bg-red-100 border-2 border-red-200 text-red-700 py-3 rounded-xl font-black text-sm flex items-center justify-center gap-1 transition-colors shadow-sm">
+                        <a href="https://pokemonmezastar.com.tw/" target="_blank" rel="noopener noreferrer" class="bg-red-50 hover:bg-red-100 border-2 border-red-200 text-red-700 py-3 rounded-xl font-black text-sm flex items-center justify-center gap-1 transition-colors shadow-sm">
                             <i data-lucide="globe" class="w-4 h-4"></i> 官網查詢
                         </a>
                     </div>
@@ -287,19 +314,19 @@
         <!-- QR Code 全螢幕彈窗 -->
         <div id="qr-modal" class="absolute inset-0 bg-slate-900/95 backdrop-blur-md hidden flex-col items-center justify-center p-6 z-[60]" onclick="window.關閉QRCode()">
             <!-- 內容區 -->
-            <div class="bg-white rounded-3xl p-6 flex flex-col items-center justify-center shadow-2xl relative w-full max-w-[320px]" onclick="event.stopPropagation()">
+            <div id="qr-lock-card" class="qr-lock-card bg-white rounded-3xl p-6 flex flex-col items-center justify-center shadow-2xl relative w-full max-w-[320px]" onclick="event.stopPropagation()">
                 <div class="flex items-center gap-2 mb-4">
                     <i data-lucide="scan-line" class="text-slate-500 w-5 h-5"></i>
                     <p class="text-sm font-black text-slate-500">請讓機台掃描此條碼</p>
                 </div>
-                
+
                 <!-- QR 圖片放置處 -->
                 <div class="w-full aspect-square bg-slate-50 rounded-xl flex items-center justify-center overflow-hidden pointer-events-none p-2 border-2 border-slate-200">
-                    <img src="./qrcode.jpg" alt="會員 QR Code" class="w-full h-full object-contain" />
+                    <img src="./qrcode.jpg" alt="會員 QR Code" class="w-full h-full object-contain" loading="lazy" decoding="async" />
                 </div>
-                
+
                 <p class="mt-4 text-2xl font-black text-slate-800 tracking-widest font-mono">ID: 3366650057</p>
-                
+
                 <button onclick="window.關閉QRCode()" class="mt-6 w-full bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 rounded-xl font-black text-lg transition-transform active:scale-95 border-2 border-slate-200 flex items-center justify-center gap-2">
                     <i data-lucide="x" class="w-5 h-5"></i> 關閉畫面
                 </button>
@@ -327,7 +354,7 @@
                             <button onclick="window.設定表單玩家('妹妹')" data-player="妹妹" class="form-player-btn flex-1 py-2.5 rounded-xl font-black text-sm transition-all border-2 bg-white border-slate-200 text-slate-500">妹妹</button>
                         </div>
                     </div>
-                    
+
                     <!-- 金額與日期 -->
                     <div class="flex gap-3">
                         <div class="flex-1"><label class="block text-sm font-black text-slate-700 mb-1 flex items-center gap-1"><i data-lucide="dollar-sign" class="w-[14px] h-[14px]"></i> 金額</label>
@@ -347,7 +374,7 @@
                     <!-- 卡片資訊區 (加入自動帶入功能) -->
                     <div class="bg-white p-3 rounded-2xl border-2 border-slate-200 shadow-sm space-y-3">
                         <p class="text-xs font-bold text-slate-400 flex items-center gap-1"><i data-lucide="credit-card" class="w-3 h-3"></i> 戰利品資訊（輸入代號可自動抓取）</p>
-                        
+
                         <!-- 代號與自動帶入按鈕 -->
                         <div>
                             <label class="block text-[10px] font-bold text-slate-500 mb-1">卡號 (例如: 1-1-001)</label>
@@ -387,12 +414,12 @@
                             <!-- JS 渲染 -->
                         </div>
                     </div>
-                    
+
                     <!-- 備註 -->
                     <div><label class="block text-sm font-black text-slate-700 mb-1 flex items-center gap-1"><i data-lucide="edit-2" class="w-[14px] h-[14px]"></i> 備註手札</label>
                         <textarea id="input-note" placeholder="記錄一下當時開心的心情吧！" class="w-full border-2 border-slate-200 rounded-xl px-3 py-2 text-slate-700 h-16 resize-none focus:outline-none focus:border-red-400 bg-white text-sm"></textarea>
                     </div>
-                    
+
                     <button onclick="window.儲存表單紀錄()" class="w-full bg-red-600 hover:bg-red-500 text-white font-black text-lg py-3.5 rounded-2xl transition-transform active:scale-95 shadow-[0_4px_0_#991b1b] flex justify-center items-center gap-2 mt-2 border-2 border-red-800">
                         <div class="pokeball-icon w-[20px] h-[20px]"></div> 儲存紀錄
                     </button>
@@ -434,7 +461,7 @@
         const K_紀錄 = 'mezastar_entries';
         const 取得今天 = () => new Date().toISOString().split('T')[0];
         const 寶貝球SVG = `<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><path d="M2 12h7"/><path d="M15 12h7"/></svg>`;
-        
+
         let 紀錄清單 = [];
         let 全域定位 = "";
         let 首頁選擇玩家 = "一起";
@@ -442,6 +469,72 @@
         let 圖鑑過濾 = "all";
         let 編輯ID = null;
         let 提示計時器 = null;
+
+        const 允許玩家 = new Set(['姊姊', '妹妹', '一起']);
+        const 允許星級 = new Set(['0', '2', '3', '4', '5', '6', 'sp']);
+
+        function 轉義HTML(value = '') {
+            return String(value).replace(/[&<>"']/g, (ch) => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            }[ch]));
+        }
+
+        function 清理文字(value = '', maxLength = 120) {
+            return String(value ?? '').trim().slice(0, maxLength);
+        }
+
+        function 清理網址(value = '') {
+            const raw = 清理文字(value, 500);
+            if (!raw) return '';
+            try {
+                const url = new URL(raw, window.location.href);
+                if (!['http:', 'https:', 'data:'].includes(url.protocol)) return '';
+                if (url.protocol === 'data:' && !raw.startsWith('data:image/')) return '';
+                return raw;
+            } catch {
+                return '';
+            }
+        }
+
+        function 產生ID() {
+            if (window.crypto?.randomUUID) return window.crypto.randomUUID();
+            return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+        }
+
+        function 正規化紀錄(item = {}) {
+            const amount = Math.max(0, Number(item.amount) || 0);
+            const date = /^\d{4}-\d{2}-\d{2}$/.test(String(item.date || '')) ? item.date : 取得今天();
+            const stars = String(item.stars ?? '0').toLowerCase();
+            return {
+                id: 清理文字(item.id, 80).replace(/[^\w-]/g, '') || 產生ID(),
+                date,
+                amount,
+                player: 允許玩家.has(item.player) ? item.player : '一起',
+                location: 清理文字(item.location, 80),
+                note: 清理文字(item.note, 300),
+                cardName: 清理文字(item.cardName, 80),
+                cardId: 清理文字(item.cardId, 40).toUpperCase(),
+                stars: 允許星級.has(stars) ? stars : '0',
+                imageUrl: 清理網址(item.imageUrl),
+                createdAt: Number(item.createdAt) || Date.now()
+            };
+        }
+
+        function 正規化紀錄清單(items = []) {
+            const usedIds = new Set();
+            return items
+                .map(正規化紀錄)
+                .filter(item => item.amount > 0)
+                .map(item => {
+                    if (usedIds.has(item.id)) item.id = 產生ID();
+                    usedIds.add(item.id);
+                    return item;
+                });
+        }
 
         function 渲染寶貝球() { document.querySelectorAll('.pokeball-icon').forEach(el => { el.innerHTML = 寶貝球SVG; }); }
         function 重整圖示() { if (typeof lucide !== 'undefined') lucide.createIcons(); 渲染寶貝球(); }
@@ -453,6 +546,24 @@
             提示計時器 = setTimeout(() => { t.classList.add('hidden'); t.classList.remove('flex', 'fade-in'); }, 2000);
         }
 
+        async function 載入外部卡片資料() {
+            try {
+                const response = await fetch('./cards.json', { cache: 'no-store' });
+                if (!response.ok) return;
+                const cards = await response.json();
+                Object.entries(cards).forEach(([id, card]) => {
+                    if (!card?.name_zh_tw) return;
+                    CardDatabase[id.toUpperCase()] = {
+                        ...CardDatabase[id.toUpperCase()],
+                        name: card.name_zh_tw,
+                        series: card.series || CardDatabase[id.toUpperCase()]?.series
+                    };
+                });
+            } catch {
+                // 直接用 file:// 開啟時 fetch 可能被瀏覽器擋下，內建資料庫仍可使用。
+            }
+        }
+
         // ==== 自動帶入功能 ====
         window.自動帶入卡片 = () => {
             const idInput = document.getElementById('input-cardId');
@@ -462,7 +573,7 @@
             const card = CardDatabase[id];
             if (card) {
                 document.getElementById('input-cardName').value = card.name;
-                document.getElementById('input-stars').value = card.stars;
+                document.getElementById('input-stars').value = card.stars || '0';
                 if (card.dex) {
                     // 使用 PokeAPI 提供的官方高畫質圖片
                     document.getElementById('input-imageUrl').value = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${card.dex}.png`;
@@ -476,22 +587,24 @@
 
         // ==== 卡片即時預覽 ====
         window.更新卡片預覽 = () => {
-            const name = document.getElementById('input-cardName').value.trim();
-            const cardId = document.getElementById('input-cardId').value.trim();
+            const name = 清理文字(document.getElementById('input-cardName').value, 80);
+            const cardId = 清理文字(document.getElementById('input-cardId').value, 40);
             const stars = document.getElementById('input-stars').value;
-            const imageUrl = document.getElementById('input-imageUrl').value.trim();
+            const imageUrl = 清理網址(document.getElementById('input-imageUrl').value);
             const preview = document.getElementById('card-preview');
 
             if (!name && !cardId && !imageUrl) { preview.classList.add('hidden'); preview.classList.remove('flex'); return; }
             preview.classList.remove('hidden'); preview.classList.add('flex');
 
             const displayName = name || cardId || '預覽';
+            const safeDisplayName = 轉義HTML(displayName);
+            const safeCardId = 轉義HTML(cardId.toUpperCase());
             const 星 = 取得星級小圖(stars);
             const imgHtml = imageUrl
-                ? `<img src="${imageUrl}" alt="${displayName}" class="w-full h-full object-contain drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] relative z-10" onerror="this.parentNode.innerHTML='<div class=\\'pokeball-icon w-full h-full text-yellow-100\\'></div>';渲染寶貝球();"/>`
+                ? `<img src="${轉義HTML(imageUrl)}" alt="${safeDisplayName}" class="w-full h-full object-contain drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] relative z-10" loading="lazy" decoding="async" onerror="this.parentNode.innerHTML='<div class=\\'pokeball-icon w-full h-full text-yellow-100\\'></div>';渲染寶貝球();"/>`
                 : `<div class="pokeball-icon w-full h-full text-yellow-100"></div>`;
             preview.innerHTML = `<div class="w-14 h-14 bg-gradient-to-br from-yellow-200 to-yellow-500 rounded-lg p-1 border-2 border-yellow-300 relative overflow-hidden shrink-0">${imgHtml}</div>
-                <div class="flex-1 text-white min-w-0"><div class="font-black text-lg tracking-wide truncate">${displayName}</div><div class="flex text-yellow-400 mt-0.5">${星}</div>${cardId ? `<div class="text-xs text-slate-300 font-mono mt-0.5">${cardId.toUpperCase()}</div>` : ''}</div>`;
+                <div class="flex-1 text-white min-w-0"><div class="font-black text-lg tracking-wide truncate">${safeDisplayName}</div><div class="flex text-yellow-400 mt-0.5">${星}</div>${cardId ? `<div class="text-xs text-slate-300 font-mono mt-0.5">${safeCardId}</div>` : ''}</div>`;
             重整圖示();
         };
 
@@ -499,7 +612,7 @@
         window.切換分頁 = (tabId, title) => {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.getElementById(`tab-${tabId}`).classList.add('active');
-            
+
             document.querySelectorAll('.nav-btn').forEach(btn => {
                 if(btn.dataset.tab === tabId) {
                     btn.classList.add('text-red-600'); btn.classList.remove('text-slate-400');
@@ -539,7 +652,7 @@
             const icon = document.getElementById('icon-global-loc');
             const text = document.getElementById('global-location-text');
             icon.classList.add('animate-spin'); text.textContent = '定位中...';
-            
+
             navigator.geolocation.getCurrentPosition(async (pos) => {
                 const { latitude: lat, longitude: lon } = pos.coords;
                 try {
@@ -547,18 +660,22 @@
                     const d = await r.json();
                     全域定位 = d.name || d.address?.amenity || d.address?.shop || d.address?.building || d.address?.road || '未知地點';
                     text.textContent = 全域定位; 顯示提示('📍 定位更新成功');
-                } catch { 
-                    全域定位 = `${lat.toFixed(4)}, ${lon.toFixed(4)}`; 
-                    text.textContent = 全域定位; 
+                } catch {
+                    全域定位 = `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
+                    text.textContent = 全域定位;
                 }
                 icon.classList.remove('animate-spin');
-            }, () => { 
-                text.textContent = '定位失敗'; icon.classList.remove('animate-spin'); 
+            }, () => {
+                text.textContent = '定位失敗'; icon.classList.remove('animate-spin');
             }, { enableHighAccuracy: true, timeout: 5000 });
         };
 
         // ==== 資料處理 ====
-        function 存到本地() { localStorage.setItem(K_紀錄, JSON.stringify(紀錄清單)); 更新畫面(); }
+        function 存到本地() {
+            紀錄清單 = 正規化紀錄清單(紀錄清單);
+            localStorage.setItem(K_紀錄, JSON.stringify(紀錄清單));
+            更新畫面();
+        }
 
         // 新增：資料匯出與還原
         // 新增：資料匯出與還原
@@ -586,8 +703,7 @@
                 try {
                     const data = JSON.parse(e.target.result);
                     if (Array.isArray(data)) {
-                        // 簡單資料驗證，過濾掉不具備基礎欄位的錯誤資料
-                        const validData = data.filter(item => item.id && item.date && item.amount !== undefined);
+                        const validData = 正規化紀錄清單(data);
                         if (validData.length === 0) throw new Error('找不到有效的備份資料');
 
                         if (confirm(`找到 ${validData.length} 筆備份資料。\n\n按「確定」將合併追加到現有資料中\n按「取消」則會完全覆蓋現有資料（需再次確認）`)) {
@@ -619,7 +735,7 @@
 
         window.首頁快速新增 = (amount) => {
             const 新紀錄 = {
-                id: Date.now().toString(),
+                id: 產生ID(),
                 date: 取得今天(),
                 amount: amount,
                 player: 首頁選擇玩家,
@@ -641,10 +757,26 @@
         };
 
         // ==== 會員 QR Code 邏輯 ====
+        function 取得螢幕角度() {
+            if (typeof screen?.orientation?.angle === 'number') return screen.orientation.angle;
+            if (typeof window.orientation === 'number') return window.orientation;
+            return 0;
+        }
+
+        function 更新QRCode方向() {
+            const card = document.getElementById('qr-lock-card');
+            const modal = document.getElementById('qr-modal');
+            if (!card || !modal || modal.classList.contains('hidden')) return;
+
+            const angle = 取得螢幕角度();
+            card.style.transform = `rotate(${-angle}deg)`;
+        }
+
         window.開啟QRCode = () => {
             const modal = document.getElementById('qr-modal');
             modal.classList.remove('hidden');
             modal.classList.add('flex', 'fade-in');
+            更新QRCode方向();
         };
 
         window.關閉QRCode = () => {
@@ -652,6 +784,9 @@
             modal.classList.add('hidden');
             modal.classList.remove('flex', 'fade-in');
         };
+
+        window.addEventListener('orientationchange', () => setTimeout(更新QRCode方向, 120));
+        window.addEventListener('resize', 更新QRCode方向);
 
         // ==== 表單邏輯 ====
         window.設定表單玩家 = (p) => {
@@ -712,19 +847,19 @@
                 date: document.getElementById('input-date').value,
                 amount: amount,
                 player: 表單選擇玩家,
-                location: document.getElementById('input-location').value,
-                note: document.getElementById('input-note').value,
-                cardName: document.getElementById('input-cardName').value.trim(),
-                cardId: document.getElementById('input-cardId').value.toUpperCase().trim(),
+                location: 清理文字(document.getElementById('input-location').value, 80),
+                note: 清理文字(document.getElementById('input-note').value, 300),
+                cardName: 清理文字(document.getElementById('input-cardName').value, 80),
+                cardId: 清理文字(document.getElementById('input-cardId').value, 40).toUpperCase(),
                 stars: document.getElementById('input-stars').value,
-                imageUrl: document.getElementById('input-imageUrl').value.trim(),
+                imageUrl: 清理網址(document.getElementById('input-imageUrl').value),
             };
 
             if (編輯ID) {
                 紀錄清單 = 紀錄清單.map(e => e.id === 編輯ID ? { ...資料, id: 編輯ID, createdAt: e.createdAt } : e);
                 顯示提示('紀錄已更新！');
             } else {
-                紀錄清單.push({ ...資料, id: Date.now().toString(), createdAt: Date.now() });
+                紀錄清單.push({ ...資料, id: 產生ID(), createdAt: Date.now() });
                 顯示提示('已新增紀錄！');
             }
             存到本地();
@@ -750,17 +885,23 @@
             if (entries.length === 0) return `<div class="text-center py-8 text-slate-400 font-bold text-sm">目前沒有紀錄喔！</div>`;
             return entries.map(entry => {
                 const 名稱 = entry.cardName || entry.cardId;
+                const safeName = 轉義HTML(名稱);
+                const safeLocation = 轉義HTML(entry.location);
+                const safeNote = 轉義HTML(entry.note);
+                const safeDate = 轉義HTML(String(entry.date || '').substring(5));
+                const safeAmount = Number(entry.amount || 0).toLocaleString();
+                const safeImageUrl = 轉義HTML(清理網址(entry.imageUrl));
                 const 標籤 = 產生玩家標籤(entry.player);
                 const 星 = 取得星級小圖(entry.stars);
-                
+
                 let contentHtml = '';
                 if (名稱) {
                     contentHtml = `
                         <div class="flex items-center gap-2 flex-1 min-w-0">
                             <div class="w-8 h-8 bg-yellow-100 rounded-lg p-0.5 shrink-0 flex items-center justify-center">
-                                ${entry.imageUrl ? `<img src="${entry.imageUrl}" class="w-full h-full object-contain" onerror="this.style.display='none'">` : '<div class="pokeball-icon text-yellow-400 w-5 h-5"></div>'}
+                                ${safeImageUrl ? `<img src="${safeImageUrl}" alt="${safeName}" class="w-full h-full object-contain" loading="lazy" decoding="async" onerror="this.style.display='none'">` : '<div class="pokeball-icon text-yellow-400 w-5 h-5"></div>'}
                             </div>
-                            <div class="min-w-0"><div class="text-sm font-black text-slate-800 truncate leading-tight">${名稱}</div><div class="flex">${星}</div></div>
+                            <div class="min-w-0"><div class="text-sm font-black text-slate-800 truncate leading-tight">${safeName}</div><div class="flex">${星}</div></div>
                         </div>
                     `;
                 } else {
@@ -788,14 +929,14 @@
                 <div class="bg-white border border-slate-200 p-3 rounded-2xl shadow-sm flex flex-col relative group fade-in">
                     <div class="flex justify-between items-start">
                         <div class="flex items-center gap-2 flex-wrap">
-                            <span class="text-xs font-bold text-slate-500">${entry.date.substring(5)}</span>
+                            <span class="text-xs font-bold text-slate-500">${safeDate}</span>
                             ${標籤}
-                            ${entry.location ? `<span class="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded flex items-center gap-0.5 max-w-[100px] truncate"><i data-lucide="map-pin" class="w-3 h-3 shrink-0"></i><span class="truncate">${entry.location}</span></span>` : ''}
+                            ${entry.location ? `<span class="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded flex items-center gap-0.5 max-w-[100px] truncate"><i data-lucide="map-pin" class="w-3 h-3 shrink-0"></i><span class="truncate">${safeLocation}</span></span>` : ''}
                         </div>
-                        <div class="font-black text-lg text-slate-700">$${entry.amount}</div>
+                        <div class="font-black text-lg text-slate-700">$${safeAmount}</div>
                     </div>
                     ${middleBar}
-                    ${entry.note ? `<p class="text-slate-600 text-xs font-bold px-1 mt-1 truncate">💬 ${entry.note}</p>` : ''}
+                    ${entry.note ? `<p class="text-slate-600 text-xs font-bold px-1 mt-1 truncate">💬 ${safeNote}</p>` : ''}
                 </div>`;
             }).join('');
         }
@@ -803,10 +944,10 @@
         // ==== 主畫面更新 ====
         function 更新畫面() {
             const sorted = [...紀錄清單].sort((a, b) => new Date(b.date) - new Date(a.date) || b.createdAt - a.createdAt);
-            
+
             // 1. 遊玩頁 - 近期3筆
             document.getElementById('recent-list').innerHTML = 產生歷史清單HTML(sorted.slice(0, 3), true);
-            
+
             // 更新圖鑑過濾器按鈕狀態
             document.querySelectorAll('.pokedex-filter-btn').forEach(btn => {
                 btn.classList.remove('bg-white', 'shadow-sm', 'border', 'border-slate-200', 'text-slate-700', 'text-pink-600', 'text-purple-600', 'text-orange-600');
@@ -833,15 +974,19 @@
             if(cards.length === 0) {
                 gridEl.innerHTML = `<div class="col-span-3 text-center py-10 text-slate-400 font-bold text-sm"><i data-lucide="box" class="w-8 h-8 mx-auto mb-2 opacity-50"></i> 尚未登錄任何卡片</div>`;
             } else {
-                gridEl.innerHTML = cards.map(c => `
-                    <div class="bg-white rounded-xl p-1 border-2 border-slate-200 shadow-sm flex flex-col items-center relative aspect-[3/4] justify-center fade-in cursor-pointer hover:border-red-400 transition-colors" onclick="window.切換分頁('history', '歷史紀錄'); window.開啟記帳彈窗('${c.id}')">
-                        <div class="absolute top-1 left-1 flex">${取得星級小圖(c.stars)}</div>
-                        <div class="w-12 h-12 mb-1 flex items-center justify-center">
-                            ${c.imageUrl ? `<img src="${c.imageUrl}" class="max-w-full max-h-full object-contain" onerror="this.style.display='none'">` : '<div class="pokeball-icon text-yellow-300 w-8 h-8"></div>'}
+                gridEl.innerHTML = cards.map(c => {
+                    const safeName = 轉義HTML(c.cardName || c.cardId);
+                    const safeImageUrl = 轉義HTML(清理網址(c.imageUrl));
+                    return `
+                        <div class="bg-white rounded-xl p-1 border-2 border-slate-200 shadow-sm flex flex-col items-center relative aspect-[3/4] justify-center fade-in cursor-pointer hover:border-red-400 transition-colors" onclick="window.切換分頁('history', '歷史紀錄'); window.開啟記帳彈窗('${c.id}')">
+                            <div class="absolute top-1 left-1 flex">${取得星級小圖(c.stars)}</div>
+                            <div class="w-12 h-12 mb-1 flex items-center justify-center">
+                                ${safeImageUrl ? `<img src="${safeImageUrl}" alt="${safeName}" class="max-w-full max-h-full object-contain" loading="lazy" decoding="async" onerror="this.style.display='none'">` : '<div class="pokeball-icon text-yellow-300 w-8 h-8"></div>'}
+                            </div>
+                            <div class="text-[10px] font-black text-slate-700 w-full text-center truncate px-1">${safeName}</div>
                         </div>
-                        <div class="text-[10px] font-black text-slate-700 w-full text-center truncate px-1">${c.cardName || c.cardId}</div>
-                    </div>
-                `).join('');
+                    `;
+                }).join('');
             }
 
             // 3. 歷史紀錄
@@ -852,7 +997,7 @@
             document.getElementById('stat-total-spent').textContent = `NT$ ${總額.toLocaleString()}`;
             document.getElementById('stat-total-plays').textContent = Math.floor(總額 / 30);
             document.getElementById('stat-total-cards').textContent = cards.length;
-            
+
             const 姊 = sorted.filter(e => e.player === '姊姊').reduce((s, e) => s + Number(e.amount), 0);
             const 妹 = sorted.filter(e => e.player === '妹妹').reduce((s, e) => s + Number(e.amount), 0);
             const 共 = sorted.filter(e => e.player === '一起').reduce((s, e) => s + Number(e.amount), 0);
@@ -864,7 +1009,7 @@
             const 總道數 = Math.floor(總額 / 30);
             const 神卡數 = cards.filter(c => c.stars === '6' || c.stars === 'sp').length;
             const 五星以上數 = cards.filter(c => c.stars === '6' || c.stars === 'sp' || c.stars === '5').length;
-            
+
             document.getElementById('stat-rate-6').textContent = 總道數 > 0 ? `${((神卡數 / 總道數) * 100).toFixed(1)}%` : '0%';
             document.getElementById('stat-rate-5').textContent = 總道數 > 0 ? `${((五星以上數 / 總道數) * 100).toFixed(1)}%` : '0%';
 
@@ -872,17 +1017,20 @@
         }
 
         // ==== 啟動 ====
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
+            await 載入外部卡片資料();
+
             // 即時預覽綁定
             ['input-cardId', 'input-cardName', 'input-stars', 'input-imageUrl'].forEach(id => {
                 document.getElementById(id).addEventListener('input', window.更新卡片預覽);
                 document.getElementById(id).addEventListener('change', window.更新卡片預覽);
             });
 
-            try { 
-                紀錄清單 = JSON.parse(localStorage.getItem(K_紀錄) || '[]'); 
+            try {
+                紀錄清單 = 正規化紀錄清單(JSON.parse(localStorage.getItem(K_紀錄) || '[]'));
+                localStorage.setItem(K_紀錄, JSON.stringify(紀錄清單));
             } catch { 紀錄清單 = []; }
-            
+
             window.切換首頁玩家('一起'); // 初始化首頁選人
             更新畫面();
         });
