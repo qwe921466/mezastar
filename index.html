@@ -89,12 +89,17 @@
 
                 <!-- 玩家登入 QR Code 卡片 -->
                 <button onclick="window.開啟QRCode()" class="w-full bg-slate-800 hover:bg-slate-700 rounded-2xl p-3 mb-3 border-2 border-slate-700 shadow-sm flex items-center gap-3 transition-transform active:scale-95 text-left group">
-                    <div class="w-12 h-12 bg-white rounded-xl p-1 shrink-0 overflow-hidden border-2 border-slate-600 flex items-center justify-center">
-                        <img src="./qrcode.jpg" alt="QR 縮圖" class="w-full h-full object-contain" loading="lazy" decoding="async">
+                    <div class="w-16 h-12 shrink-0 grid grid-cols-2 gap-1">
+                        <div class="bg-white rounded-lg p-1 overflow-hidden border-2 border-slate-600 flex items-center justify-center">
+                            <img src="./qrcode.jpg" alt="姊姊 QR 縮圖" class="w-full h-full object-contain" loading="lazy" decoding="async">
+                        </div>
+                        <div class="bg-white rounded-lg p-1 overflow-hidden border-2 border-slate-600 flex items-center justify-center">
+                            <img src="./qrcode-younger.jpg" alt="妹妹 QR 縮圖" class="w-full h-full object-contain" loading="lazy" decoding="async">
+                        </div>
                     </div>
                     <div class="flex-1 min-w-0">
                         <p class="text-white font-black text-sm flex items-center gap-1.5"><i data-lucide="scan-line" class="w-[18px] h-[18px] text-green-400"></i> 玩家登入碼</p>
-                        <p class="text-slate-400 font-bold text-xs mt-0.5 truncate group-hover:text-slate-300 transition-colors">點擊放大機台掃描</p>
+                        <p class="text-slate-400 font-bold text-xs mt-0.5 truncate group-hover:text-slate-300 transition-colors">姊姊 / 妹妹登入碼，點擊放大掃描</p>
                     </div>
                     <div class="bg-slate-700 p-1.5 rounded-lg shrink-0">
                         <i data-lucide="maximize-2" class="w-4 h-4 text-slate-300"></i>
@@ -121,7 +126,6 @@
 
                     <div class="flex gap-2 mb-4 bg-slate-100 p-1 rounded-2xl">
                         <button onclick="window.切換首頁玩家('姊姊')" id="quick-p-sister" class="quick-player-btn flex-1 py-2 rounded-xl font-black text-sm transition-all text-slate-500">👧 姊姊</button>
-                        <button onclick="window.切換首頁玩家('一起')" id="quick-p-together" class="quick-player-btn flex-1 py-2 rounded-xl font-black text-sm transition-all bg-white shadow-sm text-orange-600 border border-slate-200">👫 一起</button>
                         <button onclick="window.切換首頁玩家('妹妹')" id="quick-p-younger" class="quick-player-btn flex-1 py-2 rounded-xl font-black text-sm transition-all text-slate-500">👧 妹妹</button>
                     </div>
 
@@ -200,19 +204,15 @@
                     <!-- 分隔線 (增加立體感凹槽設計) -->
                     <div class="h-px bg-slate-950 my-5 relative z-10 border-b border-slate-700/60 shadow-[0_1px_0_rgba(255,255,255,0.05)] mx-1"></div>
 
-                    <!-- 下半部：三玩家統計 -->
-                    <div class="grid grid-cols-3 gap-2 relative z-10">
+                    <!-- 下半部：玩家統計 -->
+                    <div class="grid grid-cols-2 gap-2 relative z-10">
                         <div class="flex flex-col items-center">
                             <span class="text-xs text-slate-300 font-bold mb-1 tracking-wide">👧 姊姊</span>
                             <span id="stat-p-sister" class="text-pink-400 font-black text-xl drop-shadow-[0_0_5px_rgba(244,114,182,0.3)]">$0</span>
                         </div>
-                        <div class="flex flex-col items-center border-x-2 border-slate-800/80">
+                        <div class="flex flex-col items-center border-l-2 border-slate-800/80">
                             <span class="text-xs text-slate-300 font-bold mb-1 tracking-wide">👧 妹妹</span>
                             <span id="stat-p-younger" class="text-purple-400 font-black text-xl drop-shadow-[0_0_5px_rgba(192,132,252,0.3)]">$0</span>
-                        </div>
-                        <div class="flex flex-col items-center">
-                            <span class="text-xs text-slate-300 font-bold mb-1 tracking-wide">🧑🤝🧑 一起</span>
-                            <span id="stat-p-together" class="text-orange-400 font-black text-xl drop-shadow-[0_0_5px_rgba(251,146,60,0.3)]">$0</span>
                         </div>
                     </div>
                 </div>
@@ -317,15 +317,20 @@
             <div id="qr-lock-card" class="qr-lock-card bg-white rounded-3xl p-6 flex flex-col items-center justify-center shadow-2xl relative w-full max-w-[320px]" onclick="event.stopPropagation()">
                 <div class="flex items-center gap-2 mb-4">
                     <i data-lucide="scan-line" class="text-slate-500 w-5 h-5"></i>
-                    <p class="text-sm font-black text-slate-500">請讓機台掃描此條碼</p>
+                    <p id="qr-modal-title" class="text-sm font-black text-slate-500">請讓機台掃描姊姊登入碼</p>
+                </div>
+
+                <div class="w-full grid grid-cols-2 gap-2 mb-4 bg-slate-100 p-1 rounded-2xl">
+                    <button onclick="window.切換QRCode('姊姊')" id="qr-tab-sister" class="qr-player-btn py-2 rounded-xl font-black text-sm transition-all bg-white shadow-sm text-pink-600 border border-slate-200">姊姊</button>
+                    <button onclick="window.切換QRCode('妹妹')" id="qr-tab-younger" class="qr-player-btn py-2 rounded-xl font-black text-sm transition-all text-slate-500">妹妹</button>
                 </div>
 
                 <!-- QR 圖片放置處 -->
                 <div class="w-full aspect-square bg-slate-50 rounded-xl flex items-center justify-center overflow-hidden pointer-events-none p-2 border-2 border-slate-200">
-                    <img src="./qrcode.jpg" alt="會員 QR Code" class="w-full h-full object-contain" loading="lazy" decoding="async" />
+                    <img id="qr-modal-image" src="./qrcode.jpg" alt="姊姊會員 QR Code" class="w-full h-full object-contain" loading="lazy" decoding="async" />
                 </div>
 
-                <p class="mt-4 text-2xl font-black text-slate-800 tracking-widest font-mono">ID: 3366650057</p>
+                <p id="qr-modal-id" class="mt-4 text-2xl font-black text-slate-800 tracking-widest font-mono">ID: 3366650057</p>
 
                 <button onclick="window.關閉QRCode()" class="mt-6 w-full bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 rounded-xl font-black text-lg transition-transform active:scale-95 border-2 border-slate-200 flex items-center justify-center gap-2">
                     <i data-lucide="x" class="w-5 h-5"></i> 關閉畫面
@@ -461,11 +466,16 @@
         const K_紀錄 = 'mezastar_entries';
         const 取得今天 = () => new Date().toISOString().split('T')[0];
         const 寶貝球SVG = `<svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><path d="M2 12h7"/><path d="M15 12h7"/></svg>`;
+        const QRCode資料 = {
+            '姊姊': { label: '姊姊', src: './qrcode.jpg', id: '3366650057', color: 'text-pink-600' },
+            '妹妹': { label: '妹妹', src: './qrcode-younger.jpg', id: '3345375435', color: 'text-purple-600' }
+        };
 
         let 紀錄清單 = [];
         let 全域定位 = "";
-        let 首頁選擇玩家 = "一起";
+        let 首頁選擇玩家 = "姊姊";
         let 表單選擇玩家 = "一起";
+        let 目前QRCode玩家 = "姊姊";
         let 圖鑑過濾 = "all";
         let 編輯ID = null;
         let 提示計時器 = null;
@@ -632,16 +642,16 @@
 
         // ==== 快速面板玩家切換 ====
         window.切換首頁玩家 = (p) => {
+            if (!['姊姊', '妹妹'].includes(p)) p = '姊姊';
             首頁選擇玩家 = p;
             document.querySelectorAll('.quick-player-btn').forEach(btn => {
-                btn.classList.remove('bg-white', 'shadow-sm', 'border', 'border-slate-200', 'text-pink-600', 'text-purple-600', 'text-orange-600');
+                btn.classList.remove('bg-white', 'shadow-sm', 'border', 'border-slate-200', 'text-pink-600', 'text-purple-600');
                 btn.classList.add('text-slate-500');
-                if((p === '姊姊' && btn.id === 'quick-p-sister') || (p === '妹妹' && btn.id === 'quick-p-younger') || (p === '一起' && btn.id === 'quick-p-together')) {
+                if((p === '姊姊' && btn.id === 'quick-p-sister') || (p === '妹妹' && btn.id === 'quick-p-younger')) {
                     btn.classList.add('bg-white', 'shadow-sm', 'border', 'border-slate-200');
                     btn.classList.remove('text-slate-500');
                     if(p === '姊姊') btn.classList.add('text-pink-600');
                     if(p === '妹妹') btn.classList.add('text-purple-600');
-                    if(p === '一起') btn.classList.add('text-orange-600');
                 }
             });
         };
@@ -772,10 +782,36 @@
             card.style.transform = `rotate(${-angle}deg)`;
         }
 
+        window.切換QRCode = (player = '姊姊') => {
+            if (!QRCode資料[player]) player = '姊姊';
+            目前QRCode玩家 = player;
+
+            const data = QRCode資料[player];
+            const title = document.getElementById('qr-modal-title');
+            const image = document.getElementById('qr-modal-image');
+            const idText = document.getElementById('qr-modal-id');
+
+            title.textContent = `請讓機台掃描${data.label}登入碼`;
+            image.src = data.src;
+            image.alt = `${data.label}會員 QR Code`;
+            idText.textContent = `ID: ${data.id}`;
+
+            document.querySelectorAll('.qr-player-btn').forEach(btn => {
+                btn.classList.remove('bg-white', 'shadow-sm', 'border', 'border-slate-200', 'text-pink-600', 'text-purple-600');
+                btn.classList.add('text-slate-500');
+            });
+
+            const activeBtn = document.getElementById(player === '姊姊' ? 'qr-tab-sister' : 'qr-tab-younger');
+            activeBtn.classList.add('bg-white', 'shadow-sm', 'border', 'border-slate-200', data.color);
+            activeBtn.classList.remove('text-slate-500');
+            更新QRCode方向();
+        };
+
         window.開啟QRCode = () => {
             const modal = document.getElementById('qr-modal');
             modal.classList.remove('hidden');
             modal.classList.add('flex', 'fade-in');
+            window.切換QRCode(QRCode資料[首頁選擇玩家] ? 首頁選擇玩家 : 目前QRCode玩家);
             更新QRCode方向();
         };
 
@@ -1000,10 +1036,8 @@
 
             const 姊 = sorted.filter(e => e.player === '姊姊').reduce((s, e) => s + Number(e.amount), 0);
             const 妹 = sorted.filter(e => e.player === '妹妹').reduce((s, e) => s + Number(e.amount), 0);
-            const 共 = sorted.filter(e => e.player === '一起').reduce((s, e) => s + Number(e.amount), 0);
             document.getElementById('stat-p-sister').textContent = `$${姊}`;
             document.getElementById('stat-p-younger').textContent = `$${妹}`;
-            document.getElementById('stat-p-together').textContent = `$${共}`;
 
             // 新增：計算血統證明 (出卡率)
             const 總道數 = Math.floor(總額 / 30);
@@ -1031,7 +1065,7 @@
                 localStorage.setItem(K_紀錄, JSON.stringify(紀錄清單));
             } catch { 紀錄清單 = []; }
 
-            window.切換首頁玩家('一起'); // 初始化首頁選人
+            window.切換首頁玩家('姊姊'); // 初始化首頁選人
             更新畫面();
         });
     </script>
